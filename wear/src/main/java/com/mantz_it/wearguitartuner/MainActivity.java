@@ -2,8 +2,10 @@ package com.mantz_it.wearguitartuner;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 /**
@@ -32,7 +34,7 @@ import android.widget.FrameLayout;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnApplyWindowInsetsListener {
 	private static final String LOGTAG = "MainActivity";
 	private boolean roundScreen = false;
 
@@ -45,33 +47,40 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		fl_root = (FrameLayout) findViewById(R.id.fl_root);
+		fl_root.setOnApplyWindowInsetsListener(this);
 
 		// Create the tuner surface:
 		tunerSurface = new TunerSurface(MainActivity.this);
+		tunerSurface.setRound(roundScreen);
 
 		// Create a GuitarTuner instance:
 		guitarTuner = new GuitarTuner(tunerSurface);
 
-		final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
-		stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
-			@Override
-			public void onLayoutInflated(WatchViewStub watchViewStub) {
-				fl_root = (FrameLayout) watchViewStub.findViewById(R.id.fl_root_round);
-				if(fl_root == null) {
-					roundScreen = false;
-					fl_root = (FrameLayout) watchViewStub.findViewById(R.id.fl_root_rect);
-					Log.i(LOGTAG, "onCreate: detected a rectangular Screen!");
-				}
-				else {
-					roundScreen = true;
-					Log.i(LOGTAG, "onCreate: detected a round Screen!");
-				}
+		// Add the surface view to the root frameLayout:
+		fl_root.addView(tunerSurface);
 
-				// Add the surface view to the root frameLayout:
-				fl_root.addView(tunerSurface);
-			}
-		});
+		// Keep screen on:
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 		Log.d(LOGTAG, "onCreate: Wear Guitar Tuner was started!");
+	}
+
+	@Override
+	public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+		if(insets.isRound()) {
+			roundScreen = true;
+			Log.i(LOGTAG, "onCreate: detected a round Screen!");
+		}
+		else {
+			roundScreen = false;
+			Log.i(LOGTAG, "onCreate: detected a rectangular Screen!");
+		}
+
+		// Update the tunerSurface:
+		if(tunerSurface != null)
+			tunerSurface.setRound(roundScreen);
+		return insets;
 	}
 
 	@Override
@@ -114,4 +123,6 @@ public class MainActivity extends Activity {
 			audioProcessingEngine.stopProcessing();
 		}
 	}
+
+
 }

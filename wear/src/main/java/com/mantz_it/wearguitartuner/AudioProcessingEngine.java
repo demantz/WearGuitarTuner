@@ -126,17 +126,17 @@ public class AudioProcessingEngine extends Thread{
 			fftInstance.applyWindow(realSamples, imagSamples);
 			fftInstance.fft(realSamples, imagSamples);
 
-			// calculate the magnitude:
+			// calculate the logarithmic magnitude:
 			// note: the spectrum is symetrical around zero Hz and we are only interested in the positive
 			// part of it.
 			for (int i = 0; i < realSamples.length / 2; i++) {
-				// Calc the magnitude = re^2 + im^2       (ignore the log and sqrt operation)
+				// Calc the magnitude = log(sqrt(re^2 + im^2))
 				// note that we still have to divide re and im by the fft size
-				realPower = realSamples[i]/BUFFER_SIZE;
+				realPower = realSamples[i]/FFT_SIZE;
 				realPower = realPower * realPower;
-				imagPower = imagSamples[i]/BUFFER_SIZE;
+				imagPower = imagSamples[i]/FFT_SIZE;
 				imagPower = imagPower * imagPower;
-				mag[i] = realPower + imagPower;
+				mag[i] = (float) Math.log10(Math.sqrt(realPower + imagPower));
 			}
 
 			// pass the magnitude samples to the Guitar Tuner:
