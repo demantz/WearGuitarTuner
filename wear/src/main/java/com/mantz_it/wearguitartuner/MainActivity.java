@@ -2,6 +2,7 @@ package com.mantz_it.wearguitartuner;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
@@ -55,7 +56,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 		tunerSurface.setRound(roundScreen);
 
 		// Create a GuitarTuner instance:
-		guitarTuner = new GuitarTuner(tunerSurface);
+		guitarTuner = new GuitarTuner(tunerSurface, (Vibrator) getSystemService(VIBRATOR_SERVICE));
 
 		// Add the surface view to the root frameLayout:
 		fl_root.addView(tunerSurface);

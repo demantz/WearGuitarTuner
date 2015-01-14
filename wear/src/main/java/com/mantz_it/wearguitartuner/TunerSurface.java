@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.text.DecimalFormat;
+
 /**
  * <h1>Wear Guitar Tuner - Tuner Surface</h1>
  *
@@ -37,14 +39,15 @@ import android.view.SurfaceView;
  */
 public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTunerCallbackInterface, SurfaceHolder.Callback {
 	private static final String LOGTAG = "TunerSurface";
-	private static final int TUNER_LAYOUT_DEBUG 	= 0;
-	private static final int TUNER_LAYOUT_DEFAULT 	= 1;
-	private int tunerLayout = TUNER_LAYOUT_DEBUG;
+	private static final int TUNER_SKIN_DEBUG = 0;
+	private static final int TUNER_SKIN_DEFAULT = 1;
+	private int tunerSkin = TUNER_SKIN_DEBUG;
 
 	private Paint backgroundPaint;
 	private Paint foregroundPaint;
 	private Paint fftPaint;
 	private Paint highlightPaint;
+	private Paint invalidPaint;
 
 	private int width;
 	private int height;
@@ -58,10 +61,14 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 		backgroundPaint.setColor(Color.BLACK);
 		foregroundPaint = new Paint();
 		foregroundPaint.setColor(Color.WHITE);
+		foregroundPaint.setTextSize(30);
 		fftPaint = new Paint();
 		fftPaint.setColor(Color.BLUE);
 		highlightPaint = new Paint();
 		highlightPaint.setColor(Color.RED);
+		invalidPaint = new Paint();
+		invalidPaint.setColor(Color.GRAY);
+		invalidPaint.setTextSize(30);
 
 		// Add a Callback to get informed when the dimensions of the SurfaceView changes:
 		this.getHolder().addCallback(this);
@@ -116,55 +123,86 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 	}
 
 	private void draw(Canvas c, GuitarTuner guitarTuner) {
-		// draw depending on selected layout:
-		switch (tunerLayout) {
-			case TUNER_LAYOUT_DEBUG:
+		// draw depending on selected skin:
+		switch (tunerSkin) {
+			case TUNER_SKIN_DEBUG:
 				drawDebug(c, guitarTuner);
 				break;
-			case TUNER_LAYOUT_DEFAULT:
+			case TUNER_SKIN_DEFAULT:
 				drawDefault(c, guitarTuner);
 				break;
 			default:
-				Log.e(LOGTAG, "draw: illegal layout: " + tunerLayout);
+				Log.e(LOGTAG, "draw: illegal skin: " + tunerSkin);
 		}
 	}
 
 	private void drawDefault(Canvas c, GuitarTuner tuner) {
+		Paint paint = foregroundPaint;
+		if(tuner.getDetectedFrequency() > tuner.getTargetFrequency()*0.99 && tuner.getDetectedFrequency() < tuner.getTargetFrequency()*1.01)
+			paint = highlightPaint;
+		if(!tuner.isValid())
+			paint = invalidPaint;
+
 		// Clear the canvas
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
-		int y = 100;
-		c.drawText("" + tuner.getStrongestFrequency(), 100, y, foregroundPaint);
-		y += 10;
+		// draw pitch letters
+
+
+		// draw scale
+
+		// draw needle
+		c.drawCircle(width/2, height*0.95f, height*0.01f, paint);
+		c.drawLine(width/2, height*0.95f, width/2, height*0.5f, paint);
 	}
 
 	public void drawDebug(Canvas c, GuitarTuner tuner) {
-		float samplesPerPx 	= (float) (tuner.getMag().length) / (float) width;		// number of fft samples per one pixel
+		// narrow to the range: 50Hz-500Hz:
+		int startFrequency = 50;
+		int endFrequency = 500;
+		int startIndex = (int) (startFrequency / tuner.getHzPerSample());
+		int endIndex = (int) (endFrequency / tuner.getHzPerSample());
+		float samplesPerPx 	= (float) (endIndex-startIndex) / (float) width;		// number of fft samples per one pixel
 		float hzPerPx 		= tuner.getHzPerSample() * samplesPerPx;	// frequency span (in Hz) of one pixel
 
 		// Clear the canvas
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
-		drawSpectrum(c, fftPaint, tuner.getMag(), -8f, -4f, tuner.getHzPerSample());
-		drawSpectrum(c, highlightPaint, tuner.getHPS(), -30f, -15f, tuner.getHzPerSample());
 
-		// Draw detected (relevant) frequency component and pitch
+		drawSpectrum(c, tuner.isValid() ? fftPaint : invalidPaint, tuner.getMag(), startIndex, endIndex, -8f, -2f, tuner.getHzPerSample());
+		drawSpectrum(c, tuner.isValid() ? highlightPaint : invalidPaint, tuner.getHPS(), startIndex, endIndex, -30f, -15f, tuner.getHzPerSample());
+
+		// Draw detected (relevant) frequency component and pitch + debug info
 		if(tuner.getDetectedFrequency() > 0) {
-			int frequencyPosition = (int) (tuner.getDetectedFrequency() / hzPerPx);
-			c.drawLine(frequencyPosition, 0, frequencyPosition, height, foregroundPaint);
-			String label = "" + tuner.getDetectedFrequency();
+			float detectedFrequency = tuner.getDetectedFrequency();
+			int pitchIndex = tuner.frequencyToPitchIndex(detectedFrequency);
+			Paint paint = tuner.isValid() ? foregroundPaint : invalidPaint;
+
+			// draw a line at the detected pitch:
+			int frequencyPosition = (int) ((detectedFrequency - startFrequency) / hzPerPx);
+			c.drawLine(frequencyPosition, 0, frequencyPosition, height, paint);
+
+			// draw frequency (in hz)
+			float yPos = height * 0.3f;
+			String text = new DecimalFormat("###.# Hz").format(detectedFrequency);
 			Rect bounds = new Rect();
-			foregroundPaint.getTextBounds(label, 0, label.length(), bounds);
+			paint.getTextBounds(text, 0, text.length(), bounds);
 			int labelPosition = frequencyPosition <= width/2 ? frequencyPosition + 5 : frequencyPosition - bounds.width() - 5;
-			c.drawText(label, 0, label.length(), labelPosition, height/2 + bounds.height()/2, foregroundPaint);
+			c.drawText(text, 0, text.length(), labelPosition, yPos, paint);
+
+			// draw pitch in letters
+			yPos += bounds.height() * 1.1f;
+			text = tuner.pitchLetterFromIndex(pitchIndex) + new DecimalFormat(" (###.# Hz)").format(tuner.pitchIndexToFrequency(pitchIndex));;
+			paint.getTextBounds(text, 0, text.length(), bounds);
+			labelPosition = frequencyPosition <= width/2 ? frequencyPosition + 5 : frequencyPosition - bounds.width() - 5;
+			c.drawText(text, 0, text.length(), labelPosition, yPos, paint);
 		}
 	}
 
-	private void drawSpectrum(Canvas c, Paint paint, float[] values, float minDB, float maxDB, float hzPerSample) {
+	private void drawSpectrum(Canvas c, Paint paint, float[] values, int start, int end, float minDB, float maxDB, float hzPerSample) {
 		float previousY		 = height;	// y coordinate of the previously processed pixel
 		float currentY;					// y coordinate of the currently processed pixel
-		float samplesPerPx 	= (float) (values.length) / (float) width;		// number of fft samples per one pixel
-		float hzPerPx 		= hzPerSample * samplesPerPx;	// frequency span (in Hz) of one pixel
+		float samplesPerPx 	= (float) (end - start) / (float) width;		// number of fft samples per one pixel
 		float dbDiff 		= maxDB - minDB;
 		float dbWidth 		= height / dbDiff; 	// Size (in pixel) per 1dB in the fft
 		float avg;				// Used to calculate the average of multiple values in mag (horizontal average)
@@ -177,7 +215,7 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 			avg = 0;
 			counter = 0;
 			for (int j = (int)(i*samplesPerPx); j < (i+1)*samplesPerPx; j++) {
-				avg += values[j];
+				avg += values[j + start];
 				counter++;
 			}
 			avg = avg / counter;

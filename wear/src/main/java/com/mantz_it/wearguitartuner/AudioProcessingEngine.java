@@ -112,9 +112,6 @@ public class AudioProcessingEngine extends Thread{
 				break;
 			}
 
-			// DEBUG:
-			Log.d(LOGTAG, "run: AUDIO READ: " + audioBuffer[0] + ", " + audioBuffer[1] + ", " + audioBuffer[2] + ", ...");
-
 			// convert the shorts to floats and zero the imagSamples buffer:
 			for (int i = 0; i < realSamples.length; i++) {
 				realSamples[i] = 0f;

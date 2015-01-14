@@ -1,5 +1,6 @@
 package com.mantz_it.wearguitartuner;
 
+import android.os.Vibrator;
 import android.util.Log;
 
 /**
@@ -32,20 +33,27 @@ public class GuitarTuner {
 	private static final String LOGTAG = "GuitarTuner";
 	private static final int LOW_CUT_OFF_FREQUENCY = 50;
 	private static final int HIGH_CUT_OFF_FREQUENCY = 2500;
+	private static final float CONCERT_PITCH = 440.0f;
 	private static final int HPS_ORDER = 3;
+	private static final long[] VIBRATE_PATTERN_UP = {0, 200};
+	private static final long[] VIBRATE_PATTERN_DOWN = {0, 200, 200, 200};
+	private static final long[] VIBRATE_PATTERN_TUNED = {0, 100, 100, 100, 100, 100};
 	private GuitarTunerCallbackInterface callbackInterface;
+	private Vibrator vibrator;
 
 	private float[] mag;					// magnitudes of the spectrum
 	private float[] hps;					// harmonic product spectrum
 	private float hzPerSample;				// frequency step of one index in mag
-	private float strongestFrequency;		// holds the frequency of the strongest (max mag) frequency component
+	private float strongestFrequency;		// holds the frequency of the strongest (max mag) frequency component (after HPS)
 	private float detectedFrequency;		// holds the frequency that was calculated to be the most likely/relevant frequency component
-	private String[] pitchScale;
-	private float[] pitchScaleInHz;
-	private String detectedPitchIndex;
+	private float targetFrequency;			// desired frequency to tune to
+	private int pitchHoldCounter = 0;		// number of cycles the same pitch was detected in series.
+	private float lastDetectedFrequency;	// detected frequency of the last cycle
+	private boolean valid;					// indicates if the current result is valid
 
-	public GuitarTuner(GuitarTunerCallbackInterface callbackInterface) {
+	public GuitarTuner(GuitarTunerCallbackInterface callbackInterface, Vibrator vibrator) {
 		this.callbackInterface = callbackInterface;
+		this.vibrator = vibrator;
 	}
 
 	public void processFFTSamples(float[] mag, int sampleRate) {
@@ -66,15 +74,43 @@ public class GuitarTuner {
 		// calculate the max (strongest frequency) of the HPS
 		int maxIndex = 0;
 		for (int i = 1; i < hps.length; i++) {
-			// max value:
 			if(hps[maxIndex] < hps[i])
 				maxIndex = i;
 		}
 		strongestFrequency = maxIndex * hzPerSample;
-		Log.d(LOGTAG, "processFFTSamples: Strongest frequency component: " + strongestFrequency);
 
 		// detect the relevant frequency component:
 		detectedFrequency = strongestFrequency; 	// DEBUG
+		targetFrequency = pitchIndexToFrequency(frequencyToPitchIndex(detectedFrequency));
+		valid = detectedFrequency >= pitchIndexToFrequency(0);
+
+		// check against the results of the past cycles:
+		if(detectedFrequency > lastDetectedFrequency*0.99 && detectedFrequency < lastDetectedFrequency*1.01) {
+			Log.d(LOGTAG, "processFFTSamples: detected frequency matches the old one!");
+			pitchHoldCounter++;
+		} else {
+			Log.d(LOGTAG, "processFFTSamples: detected frequency differs from the last by " + detectedFrequency/lastDetectedFrequency*100 + "%");
+			pitchHoldCounter = 0;
+		}
+		lastDetectedFrequency = detectedFrequency;
+
+		// If we have a stable pitch since more than 3 cycles, give feedback to the user:
+		if(pitchHoldCounter > 3) {
+			if(detectedFrequency < targetFrequency*0.99) {
+				Log.i(LOGTAG, "processFFTSamples: Result: Tune up by " + (targetFrequency-detectedFrequency) + " Hz! "
+								+ "Target frequency is " + targetFrequency + " Hz.");
+				vibrator.vibrate(VIBRATE_PATTERN_UP, -1);
+			} else if(detectedFrequency > targetFrequency*1.01) {
+				Log.i(LOGTAG, "processFFTSamples: Result: Tune down by " + (detectedFrequency-targetFrequency) + " Hz! "
+								+ "Target frequency is " + targetFrequency + " Hz.");
+				vibrator.vibrate(VIBRATE_PATTERN_DOWN, -1);
+			} else {
+				Log.i(LOGTAG, "processFFTSamples: Result: TUNED! Target frequency is " + targetFrequency + " Hz (Error: "
+								+ (detectedFrequency-targetFrequency) + " Hz).");
+				vibrator.vibrate(VIBRATE_PATTERN_TUNED, -1);
+			}
+			pitchHoldCounter = 0;
+		}
 
 		// inform the callback interface about updated values:
 		callbackInterface.process(this);
@@ -115,6 +151,37 @@ public class GuitarTuner {
 		}
 	}
 
+	public int frequencyToPitchIndex(float frequency) {
+		float A1 = CONCERT_PITCH / 8;
+		return Math.round((float) (12 * Math.log(frequency / A1) / Math.log(2)));
+	}
+
+	public float pitchIndexToFrequency(int index) {
+		float A1 = CONCERT_PITCH / 8;
+		return (float) (A1 * Math.pow(2, index/12f));
+	}
+
+	public String pitchLetterFromIndex(int index) {
+		String letters;
+		int octaveNumber = ((index+9) / 12) + 1;
+		switch(index%12) {
+			case 0:  letters = "a" + octaveNumber; break;
+			case 1:  letters = "a" + octaveNumber + "#"; break;
+			case 2:  letters = "b" + octaveNumber; break;
+			case 3:  letters = "c" + octaveNumber; break;
+			case 4:  letters = "c" + octaveNumber + "#"; break;
+			case 5:  letters = "d" + octaveNumber; break;
+			case 6:  letters = "d" + octaveNumber + "#"; break;
+			case 7:  letters = "e" + octaveNumber; break;
+			case 8:  letters = "f" + octaveNumber; break;
+			case 9:  letters = "f" + octaveNumber + "#"; break;
+			case 10: letters = "g" + octaveNumber; break;
+			case 11: letters = "g" + octaveNumber + "#"; break;
+			default: letters = "err";
+		}
+		return letters;
+	}
+
 	public float getStrongestFrequency() {
 		return strongestFrequency;
 	}
@@ -135,16 +202,12 @@ public class GuitarTuner {
 		return detectedFrequency;
 	}
 
-	public String[] getPitchScale() {
-		return pitchScale;
+	public float getTargetFrequency() {
+		return targetFrequency;
 	}
 
-	public float[] getPitchScaleInHz() {
-		return pitchScaleInHz;
-	}
-
-	public String getDetectedPitchIndex() {
-		return detectedPitchIndex;
+	public boolean isValid() {
+		return valid;
 	}
 
 	public interface GuitarTunerCallbackInterface {
