@@ -53,6 +53,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 
 		// Create the tuner surface:
 		tunerSurface = new TunerSurface(MainActivity.this);
+		tunerSurface.setTunerSkin(new DefaultTunerSkin());	// DEBUG
 		tunerSurface.setRound(roundScreen);
 
 		// Create a GuitarTuner instance:

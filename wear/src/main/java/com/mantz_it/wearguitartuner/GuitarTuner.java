@@ -50,6 +50,7 @@ public class GuitarTuner {
 	private int pitchHoldCounter = 0;		// number of cycles the same pitch was detected in series.
 	private float lastDetectedFrequency;	// detected frequency of the last cycle
 	private boolean valid;					// indicates if the current result is valid
+	private boolean vibrate = false;		// on/off switch for the vibration feedback
 
 	public GuitarTuner(GuitarTunerCallbackInterface callbackInterface, Vibrator vibrator) {
 		this.callbackInterface = callbackInterface;
@@ -99,15 +100,18 @@ public class GuitarTuner {
 			if(detectedFrequency < targetFrequency*0.99) {
 				Log.i(LOGTAG, "processFFTSamples: Result: Tune up by " + (targetFrequency-detectedFrequency) + " Hz! "
 								+ "Target frequency is " + targetFrequency + " Hz.");
-				vibrator.vibrate(VIBRATE_PATTERN_UP, -1);
+				if(vibrate)
+					vibrator.vibrate(VIBRATE_PATTERN_UP, -1);
 			} else if(detectedFrequency > targetFrequency*1.01) {
 				Log.i(LOGTAG, "processFFTSamples: Result: Tune down by " + (detectedFrequency-targetFrequency) + " Hz! "
 								+ "Target frequency is " + targetFrequency + " Hz.");
-				vibrator.vibrate(VIBRATE_PATTERN_DOWN, -1);
+				if(vibrate)
+					vibrator.vibrate(VIBRATE_PATTERN_DOWN, -1);
 			} else {
 				Log.i(LOGTAG, "processFFTSamples: Result: TUNED! Target frequency is " + targetFrequency + " Hz (Error: "
 								+ (detectedFrequency-targetFrequency) + " Hz).");
-				vibrator.vibrate(VIBRATE_PATTERN_TUNED, -1);
+				if(vibrate)
+					vibrator.vibrate(VIBRATE_PATTERN_TUNED, -1);
 			}
 			pitchHoldCounter = 0;
 		}
