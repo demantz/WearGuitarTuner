@@ -214,6 +214,14 @@ public class GuitarTuner {
 		return valid;
 	}
 
+	public boolean isVibrate() {
+		return vibrate;
+	}
+
+	public void setVibrate(boolean vibrate) {
+		this.vibrate = vibrate;
+	}
+
 	public interface GuitarTunerCallbackInterface {
 		public void process(GuitarTuner guitarTuner);
 	}

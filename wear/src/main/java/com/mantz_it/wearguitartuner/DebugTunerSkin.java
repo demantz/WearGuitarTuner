@@ -54,8 +54,8 @@ public class DebugTunerSkin extends TunerSkin {
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
 
-		drawSpectrum(c, tuner.isValid() ? fftPaint : invalidPaint, tuner.getMag(), startIndex, endIndex, -8f, -2f, tuner.getHzPerSample());
-		drawSpectrum(c, tuner.isValid() ? highlightPaint : invalidPaint, tuner.getHPS(), startIndex, endIndex, -30f, -15f, tuner.getHzPerSample());
+		drawSpectrum(c, tuner.isValid() ? fftPaint : invalidPaint, tuner.getMag(), startIndex, endIndex, -9f, -2f, tuner.getHzPerSample());
+		drawSpectrum(c, tuner.isValid() ? highlightPaint : invalidPaint, tuner.getHPS(), startIndex, endIndex, -35f, -15f, tuner.getHzPerSample());
 
 		// Draw detected (relevant) frequency component and pitch + debug info
 		if (tuner.getDetectedFrequency() > 0) {
