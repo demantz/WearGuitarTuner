@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -14,6 +15,15 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+
+import com.mantz_it.guitartunerlibrary.AudioProcessingEngine;
+import com.mantz_it.guitartunerlibrary.DebugTunerSkin;
+import com.mantz_it.guitartunerlibrary.DefaultTunerSkin;
+import com.mantz_it.guitartunerlibrary.GuitarTuner;
+import com.mantz_it.guitartunerlibrary.TunerSkin;
+import com.mantz_it.guitartunerlibrary.TunerSurface;
+
+import java.io.File;
 
 /**
  * <h1>Wear Guitar Tuner - Main Activity</h1>
@@ -44,8 +54,11 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements View.OnApplyWindowInsetsListener {
 	private static final String LOGTAG = "MainActivity";
 	private boolean roundScreen = false;
+	private boolean loggingEnabled = false;
+	private String logFilename = "WearGuitarTuner.log";
 
 	private SharedPreferences preferences;
+	private Process logcat;
 	private GestureDetector gestureDetector;
 	private AudioProcessingEngine audioProcessingEngine;
 	private GuitarTuner guitarTuner;
@@ -82,6 +95,21 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 				startActivity(intent);
 			}
 		});
+
+		// Start logging if enabled:
+		if(loggingEnabled) {
+			try{
+				// Get path to the external storage:
+				String extStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+				File logfile = new File(extStorage + "/" + logFilename);
+				if(logfile.exists())
+					logfile.delete();
+				logcat = Runtime.getRuntime().exec("logcat -f " + logfile);
+				Log.i("MainActivity", "onCreate: started logcat ("+logcat.toString()+") to " + logfile.getAbsolutePath());
+			} catch (Exception e) {
+				Log.e("MainActivity", "onCreate: Failed to start logging: " + e.getMessage());
+			}
+		}
 
 		Log.d(LOGTAG, "onCreate: Wear Guitar Tuner was started!");
 	}
@@ -177,6 +205,17 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 
 		// allow screen to turn off:
 		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+		// stop logging:
+		if(logcat != null) {
+			try {
+				logcat.destroy();
+				logcat.waitFor();
+				Log.i(LOGTAG, "onDestroy: logcat exit value: " + logcat.exitValue());
+			} catch (Exception e) {
+				Log.e(LOGTAG, "onDestroy: couldn't stop logcat: " + e.getMessage());
+			}
+		}
 	}
 
 	@Override

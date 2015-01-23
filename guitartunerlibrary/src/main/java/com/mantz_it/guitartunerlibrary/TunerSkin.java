@@ -1,4 +1,4 @@
-package com.mantz_it.wearguitartuner;
+package com.mantz_it.guitartunerlibrary;
 
 import android.graphics.Canvas;
 import android.graphics.Color;

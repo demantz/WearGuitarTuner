@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Wear Guitar Tuner</string>
+    <string name="app_label">Guitar Tuner</string>
+    <string name="pref_skinIndex" translatable="false">pref_skinIndex</string>
+    <string name="pref_roundScreen" translatable="false">pref_roundScreen</string>
+    <string name="pref_vibration_enabled" translatable="false">pref_vibration_enabled</string>
+    <string name="pref_mainActivityFirstStart" translatable="false">pref_mainActivityFirstStart</string>
+    <string name="pref_settingsActivityFirstStart" translatable="false">pref_settingsActivityFirstStart</string>
+</resources>

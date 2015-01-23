@@ -1,4 +1,4 @@
-package com.mantz_it.wearguitartuner;
+package com.mantz_it.guitartunerlibrary;
 /*
  *  Copyright 2006-2007 Columbia University.
  *

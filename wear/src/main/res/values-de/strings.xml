@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Stimmgerät</string>
-    <string name="toast_main_activity_first_start">Langer Click öffnet die Einstellungen &#8230;</string>
+    <string name="toast_main_activity_first_start">Lange berühren zum Öffnen der Einstellungen &#8230;</string>
     <string name="toast_settings_activity_first_start_scroll_right">Scrolle nach rechts um das Design zu ändern!</string>
     <string name="toast_settings_activity_first_start_scroll_down">Scrolle nach unten für weitere Einstellungen!</string>
     <string name="turn_vibration_on">Vibration aktivieren</string>

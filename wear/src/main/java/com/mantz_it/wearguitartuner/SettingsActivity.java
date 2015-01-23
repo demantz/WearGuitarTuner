@@ -109,7 +109,7 @@ public class SettingsActivity extends Activity {
 					break;
 				case 1:	// Vibrate ON/OFF
 					final boolean vibrationEnabled = preferences.getBoolean(getString(R.string.pref_vibration_enabled), true);
-					fragment = ActionFragment.create(android.R.drawable.arrow_up_float,
+					fragment = ActionFragment.create(R.drawable.ic_watch_vibrate,
 													vibrationEnabled ? R.string.turn_vibration_off : R.string.turn_vibration_on,
 													new ActionFragment.Listener() {
 						@Override

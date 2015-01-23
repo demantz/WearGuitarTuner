@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <string name="app_name">Guitar Tuner</string>
     <string name="toast_main_activity_first_start">Long press for settings &#8230;</string>
     <string name="toast_settings_activity_first_start_scroll_right">Scroll right to choose skin!</string>
     <string name="toast_settings_activity_first_start_scroll_down">Scroll down for more settings!</string>
     <string name="turn_vibration_on">Turn vibration on</string>
     <string name="turn_vibration_off">Turn vibration off</string>
-    <string name="pref_skinIndex" translatable="false">pref_skinIndex</string>
-    <string name="pref_roundScreen" translatable="false">pref_roundScreen</string>
-    <string name="pref_vibration_enabled" translatable="false">pref_vibration_enabled</string>
-    <string name="pref_mainActivityFirstStart" translatable="false">pref_mainActivityFirstStart</string>
-    <string name="pref_settingsActivityFirstStart" translatable="false">pref_settingsActivityFirstStart</string>
-
 </resources>
