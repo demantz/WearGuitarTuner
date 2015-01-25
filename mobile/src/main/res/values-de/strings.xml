@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="next">Weiter</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="button_showLog">Zeige Logdatei der Smartwatch</string>
+    <string name="finish">Fertig</string>
+    <string name="intro_page_0_heading">Willkommen zum Gitarrenstimmgerät für Android Wear</string>
+    <string name="intro_page_0_text">bla bla willkommen</string>
+    <string name="intro_page_1_heading">Haptisches Feedback</string>
+    <string name="intro_page_1_text">bla bla vibration</string>
+    <string name="intro_page_2_heading">Passen Sie das Stimmgerät individuell an</string>
+    <string name="intro_page_2_text">bla bla einstellungen</string>
+    <string name="skip_intro">Überspringen</string>
+    <string name="welcome_message">Dies ist ein Gitarrenstimmgerät für Android Wear! Bitte starten Sie die App
+auf ihrer Smartwatch. Wenn Sie die App dort nicht finden können, hilft eventuell ein Klick auf \'Apps erneut
+synchronisieren\' unter den Einstellungen der Google Android Wear App.</string>
+    <string name="button_shareLog">Versende die Logdatei per Email</string>
+    <string name="chooseMailApp">Wähle eine App zum Versenden der Logdatei</string>
+</resources>

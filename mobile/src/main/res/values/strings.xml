@@ -2,8 +2,20 @@
 <resources>
     <string name="welcome_message">This is Wear Guitar Tuner! Please launch the App on your connected
 wearable Android device. If you can\'t find the App on your wearable device, try to open the Android Wear
-App and hit Resync Apps in the Settings.</string>
+Companion App and hit \'Resync Apps\' in the Settings.</string>
     <string name="action_settings">Settings</string>
     <string name="button_showLog">Show log file of the wearable</string>
+    <string name="skip_intro">Skip intro</string>
+    <string name="next">Next</string>
+    <string name="finish">Finish</string>
+    <string name="intro_page_0_heading">Welcome to Wear Guitar Tuner</string>
+    <string name="intro_page_1_heading">Haptic Feedback</string>
+    <string name="intro_page_2_heading">Customize Wear Guitar Tuner</string>
+    <string name="intro_page_0_text">bla bla welcome</string>
+    <string name="intro_page_1_text">bla bla vibration</string>
+    <string name="intro_page_2_text">bla bla settings</string>
+    <string name="pref_mainActivityFirstStart" translatable="false">pref_mainActivityFirstStart</string>
+    <string name="button_shareLog">Share log file via email</string>
+    <string name="chooseMailApp">Choose the App to share the log file</string>
 
 </resources>

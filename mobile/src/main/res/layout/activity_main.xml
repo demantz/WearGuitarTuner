@@ -22,9 +22,18 @@
         android:id="@+id/bt_showLog"
         android:onClick="onBtShowLogClicked"/>
 
-    <TextView
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/tv_log"/>
+        android:text="@string/button_shareLog"
+        android:enabled="false"
+        android:id="@+id/bt_shareLog"
+        android:onClick="onBtShareLogClicked"/>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/tv_log"
+        android:scrollbars="vertical"/>
 
 </LinearLayout>

@@ -5,4 +5,5 @@
     <string name="toast_settings_activity_first_start_scroll_down">Scroll down for more settings!</string>
     <string name="turn_vibration_on">Turn vibration on</string>
     <string name="turn_vibration_off">Turn vibration off</string>
+    <string name="pref_settingsActivityFirstStart" translatable="false">pref_settingsActivityFirstStart</string>
 </resources>

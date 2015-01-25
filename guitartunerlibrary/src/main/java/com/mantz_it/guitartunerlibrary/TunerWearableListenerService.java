@@ -68,12 +68,13 @@ public class TunerWearableListenerService extends WearableListenerService {
 
 				StringBuilder log=new StringBuilder();
 				String line = "";
+				String newline = System.getProperty("line.separator");
 				while ((line = bufferedReader.readLine()) != null) {
-					log.append(line);
+					log.append(line + newline);
 				}
 
 				// Send it to the handheld device:
-				sendMessageAsync(messageEvent.getSourceNodeId(), GET_LOG_RESPONSE_MESSAGE_PATH, log.toString().getBytes());
+				sendMessageAsync(messageEvent.getSourceNodeId(), GET_LOG_RESPONSE_MESSAGE_PATH, log.toString().getBytes("UTF-8"));
 			}
 			catch (IOException e) {
 				Log.e(LOGTAG, "onMessageReceived: Error while reading log: " + e.getMessage());

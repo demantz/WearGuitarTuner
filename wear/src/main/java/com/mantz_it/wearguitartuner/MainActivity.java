@@ -172,11 +172,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 		guitarTuner.setVibrate(preferences.getBoolean(getString(R.string.pref_vibration_enabled), true));
 
 		// Show Toast on first startup:
-		boolean firstStart = preferences.getBoolean(getString(R.string.pref_mainActivityFirstStart), true);
-		if(firstStart) {
-			SharedPreferences.Editor edit = preferences.edit();
-			edit.putBoolean(getString(R.string.pref_mainActivityFirstStart), false);
-			edit.apply();
+		if(preferences.getBoolean(getString(R.string.pref_settingsActivityFirstStart), true)) {
 			Toast.makeText(this, getString(R.string.toast_main_activity_first_start), Toast.LENGTH_LONG).show();
 		}
 

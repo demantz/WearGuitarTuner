@@ -1,11 +1,17 @@
 package com.mantz_it.wearguitartuner;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -20,12 +26,40 @@ import com.mantz_it.guitartunerlibrary.TunerWearableListenerService;
 
 import java.io.UnsupportedEncodingException;
 
-
+/**
+ * <h1>Wear Guitar Tuner - Handheld Main Activity</h1>
+ *
+ * Module:      MainActivity.java
+ * Description: Main Activity on the handheld device. Will show a quick intro at the first
+ *              execution and provide settings for the wear application.
+ *
+ * @author Dennis Mantz
+ *
+ * Copyright (C) 2014 Dennis Mantz
+ * License: http://www.gnu.org/licenses/gpl.html GPL version 2 or higher
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener {
 	private static final String LOGTAG = "MainActivity";
 	private TextView tv_log;
+	private Button bt_showLog;
+	private Button bt_shareLog;
 	private GoogleApiClient googleApiClient;
 	private Node wearableNode;
+	private SharedPreferences preferences;
 
 
 	@Override
@@ -33,9 +67,22 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		// Get reference to the shared preferences:
+		preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+		// Show intro slides if this is the first execution:
+		if(preferences.getBoolean(getString(R.string.pref_mainActivityFirstStart), true)) {
+			Intent intent = new Intent(this,IntroActivity.class);
+			startActivity(intent);
+			finish();
+		}
+
 		tv_log = (TextView) findViewById(R.id.tv_log);
+		bt_showLog = (Button) findViewById(R.id.bt_showLog);
+		bt_shareLog = (Button) findViewById(R.id.bt_shareLog);
 
 		tv_log.setText(getString(R.string.app_label));
+		tv_log.setMovementMethod(new ScrollingMovementMethod());	// make it scroll!
 
 		googleApiClient = new GoogleApiClient.Builder(this)
 				.addConnectionCallbacks(this)
@@ -103,15 +150,16 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 				+ messageEvent.getSourceNodeId());
 
 		try {
-			final String log = new String(messageEvent.getData(), "ASCII");
+			final String log = new String(messageEvent.getData(), "UTF-8");
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					tv_log.setText(log);
+					bt_shareLog.setEnabled(true);
 				}
 			});
 		} catch (UnsupportedEncodingException e) {
-			Log.e(LOGTAG, "onMessageReceived: unsupported Encoding (ASCII): " + e.getMessage());
+			Log.e(LOGTAG, "onMessageReceived: unsupported Encoding (UTF-8): " + e.getMessage());
 		}
 	}
 
@@ -160,5 +208,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 					Log.d(LOGTAG, "onBtShowLogClicked: message (" + sendMessageResult.getRequestId() + ") was sent!");
 			}
 		});
+	}
+
+	public void onBtShareLogClicked(View view) {
+		// Invoke email app:
+		Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "dennis.mantz@googlemail.com", null));
+		intent.putExtra(Intent.EXTRA_SUBJECT, "Wear Guitar Tuner log report");
+		intent.putExtra(Intent.EXTRA_TEXT, tv_log.getText().toString());
+		startActivity(Intent.createChooser(intent, getString(R.string.chooseMailApp)));
 	}
 }

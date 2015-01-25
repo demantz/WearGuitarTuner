@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@android:color/holo_orange_dark">
+
+    <android.support.v4.view.ViewPager
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/vp_intro_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/skip_intro"
+            android:onClick="onBtSkipClicked"
+            android:id="@+id/bt_intro_skip"
+            android:layout_weight="1"
+            style="@android:style/ButtonBar"
+            android:background="@android:color/holo_orange_dark"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/next"
+            android:onClick="onBtNextClicked"
+            android:id="@+id/bt_intro_next"
+            android:layout_weight="1"
+            style="@android:style/ButtonBar"
+            android:background="@android:color/holo_orange_dark"/>
+    </LinearLayout>
+
+</LinearLayout>
