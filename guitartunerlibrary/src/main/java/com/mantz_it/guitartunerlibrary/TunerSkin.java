@@ -1,5 +1,6 @@
 package com.mantz_it.guitartunerlibrary;
 
+import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -42,6 +43,7 @@ public abstract class TunerSkin {
 	protected int width;
 	protected int height;
 	protected boolean round = false;
+	protected int desiredRefreshRate = -1;	// refreshRate of the Surface in ms
 
 	public TunerSkin() {
 		// Initialize paint objects:
@@ -69,5 +71,51 @@ public abstract class TunerSkin {
 		this.round = round;
 	}
 
+	public void setDesiredRefreshRate(int refreshRateInMs) {
+		this.desiredRefreshRate = refreshRateInMs;
+	}
+
+	public int getDesiredRefreshRate() {
+		return desiredRefreshRate;
+	}
+
 	public abstract void draw(Canvas c, GuitarTuner tuner);
+
+
+	// STATIC methods for easy handling of all available skins:
+
+	public static int getTunerSkinCount() {
+		return 3;
+	}
+
+	public static TunerSkin getTunerSkinInstance(int skinIndex, Activity activity) {
+		switch (skinIndex) {
+			case 0:  return new DefaultTunerSkin();
+			case 1:  return new VintageNeedleTunerSkin(activity.getResources());
+			case 2:  return new DebugTunerSkin();
+			default: return null;
+		}
+	}
+
+	public static int getTunerSkinThumbnailResource(int skinIndex, boolean round) {
+		switch (skinIndex) {
+			case 0:
+				return round ? R.drawable.thumbnail_default_skin_round : R.drawable.thumbnail_default_skin_rect;
+			case 1:
+				return round ? R.drawable.thumbnail_vintage_needle_skin_round : R.drawable.thumbnail_vintage_needle_skin_rect;
+			case 2:
+				return round ? R.drawable.thumbnail_debug_skin_round : R.drawable.thumbnail_debug_skin_rect;
+			default:
+				return -1;
+		}
+	}
+
+	public static String getTunerSkinName(int skinIndex) {
+		switch (skinIndex) {
+			case 0:  return "Default Skin";
+			case 1:  return "Vintage Needle Skin";
+			case 2:  return "Debug Skin";
+			default: return null;
+		}
+	}
 }

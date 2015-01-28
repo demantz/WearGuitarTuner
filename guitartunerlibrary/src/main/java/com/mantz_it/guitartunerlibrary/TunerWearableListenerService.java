@@ -1,5 +1,6 @@
 package com.mantz_it.guitartunerlibrary;
 
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -70,7 +71,8 @@ public class TunerWearableListenerService extends WearableListenerService {
 				String line = "";
 				String newline = System.getProperty("line.separator");
 				while ((line = bufferedReader.readLine()) != null) {
-					log.append(line + newline);
+					log.append(line);
+					log.append(newline);
 				}
 
 				// Send it to the handheld device:
@@ -79,6 +81,9 @@ public class TunerWearableListenerService extends WearableListenerService {
 			catch (IOException e) {
 				Log.e(LOGTAG, "onMessageReceived: Error while reading log: " + e.getMessage());
 			}
+		} else if(messageEvent.getPath().startsWith("/syncPref/")) {
+			PreferenceSyncHelper.handleSyncMessage(PreferenceManager.getDefaultSharedPreferences(this).edit(),
+					messageEvent.getPath(), messageEvent.getData());
 		}
 	}
 

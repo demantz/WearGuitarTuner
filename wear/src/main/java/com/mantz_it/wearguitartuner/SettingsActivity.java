@@ -19,6 +19,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
+import com.mantz_it.guitartunerlibrary.PreferenceSyncHelper;
+import com.mantz_it.guitartunerlibrary.TunerSkin;
+
 /**
  * <h1>Wear Guitar Tuner - Settings Activity</h1>
  *
@@ -45,17 +54,13 @@ import android.widget.Toast;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 	private static final String LOGTAG = "SettingsActivity";
-	public static final String[] TUNER_SKIN_NAMES = new String[] {	"Default Skin",
-																	"Debug Skin" };
-	public static final int[] TUNER_SKIN_THUMBNAILS_ROUND = new int[] {	R.drawable.thumbnail_default_skin_round,
-																		R.drawable.thumbnail_debug_skin_round };
-	public static final int[] TUNER_SKIN_THUMBNAILS_RECT = new int[] {	R.drawable.thumbnail_default_skin_rect,
-																		R.drawable.thumbnail_debug_skin_rect };
 
 	private SharedPreferences preferences;
 	private boolean roundScreen;
+	private GoogleApiClient googleApiClient;
+	private Node handheldNode;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +71,12 @@ public class SettingsActivity extends Activity {
 
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		roundScreen = preferences.getBoolean(getString(R.string.pref_roundScreen), false);
+
+		googleApiClient = new GoogleApiClient.Builder(this)
+				.addConnectionCallbacks(this)
+				.addOnConnectionFailedListener(this)
+				.addApi(Wearable.API)
+				.build();
 	}
 
 	@Override
@@ -81,6 +92,17 @@ public class SettingsActivity extends Activity {
 			Toast.makeText(this, getString(R.string.toast_settings_activity_first_start_scroll_right), Toast.LENGTH_LONG).show();
 			Toast.makeText(this, getString(R.string.toast_settings_activity_first_start_scroll_down), Toast.LENGTH_LONG).show();
 		}
+
+		// connect the google api client:
+		googleApiClient.connect();
+	}
+
+	@Override
+	protected void onStop() {
+		// disconnect the google api client:
+		if (googleApiClient != null && googleApiClient.isConnected())
+			googleApiClient.disconnect();
+		super.onStop();
 	}
 
 	private void returnToMainActivity() {
@@ -88,6 +110,41 @@ public class SettingsActivity extends Activity {
 		Intent intent = new Intent(SettingsActivity.this, MainActivity.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
+	}
+
+	/**
+	 * Gets called after googleApiClient.connect() was executed successfully
+	 */
+	@Override
+	public void onConnected(Bundle bundle) {
+		Log.d(LOGTAG, "onConnected: googleApiClient connected!");
+
+		// Enumerate nodes:
+		Wearable.NodeApi.getConnectedNodes(googleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+			@Override
+			public void onResult(NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+				for (Node node : getConnectedNodesResult.getNodes()) {
+					Log.i(LOGTAG, "onConnected: Found node: " + node.getDisplayName() + " (" + node.getId() + ")");
+					handheldNode = node;	// for now we just expect one single node to be found..
+				}
+			}
+		});
+	}
+
+	/**
+	 * Gets called after googleApiClient.connect() was executed successfully and the api connection is suspended again
+	 */
+	@Override
+	public void onConnectionSuspended(int cause) {
+		Log.d(LOGTAG, "onConnectionSuspended: googleApiClient suspended: " + cause);
+	}
+
+	/**
+	 * Gets called after googleApiClient.connect() was executed and failed
+	 */
+	@Override
+	public void onConnectionFailed(ConnectionResult result) {
+		Log.d(LOGTAG, "onConnectionFailed: googleApiClient connection failed: " + result.toString());
 	}
 
 	public class SettingsGridViewPagerAdapter extends FragmentGridPagerAdapter {
@@ -118,6 +175,11 @@ public class SettingsActivity extends Activity {
 							SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).edit();
 							edit.putBoolean(getString(R.string.pref_vibration_enabled), !vibrationEnabled);
 							edit.apply();
+
+							if(handheldNode != null) {
+								PreferenceSyncHelper.syncBooleanPref(googleApiClient, handheldNode.getId(),
+										getString(R.string.pref_vibration_enabled), !vibrationEnabled);
+							}
 							returnToMainActivity();
 						}
 					});
@@ -133,7 +195,7 @@ public class SettingsActivity extends Activity {
 
 		@Override
 		public int getColumnCount(int i) {
-			return TUNER_SKIN_NAMES.length;
+			return TunerSkin.getTunerSkinCount();
 		}
 
 	}
@@ -148,18 +210,21 @@ public class SettingsActivity extends Activity {
 			final View v = inflater.inflate(R.layout.skin_preview, container, false);
 			iv_thumbnail = (ImageView) v.findViewById(R.id.iv_thumbnail);
 			if(skinIndex >= 0)
-				iv_thumbnail.setImageResource(roundScreen ? TUNER_SKIN_THUMBNAILS_ROUND[skinIndex] : TUNER_SKIN_THUMBNAILS_RECT[skinIndex]);
+				iv_thumbnail.setImageResource(TunerSkin.getTunerSkinThumbnailResource(skinIndex, roundScreen));
 
 			v.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					Log.i(LOGTAG, "onClick (SkinPreviewFragment): changing skin to " + TUNER_SKIN_NAMES[skinIndex]);
+					Log.i(LOGTAG, "onClick (SkinPreviewFragment): changing skin to " + TunerSkin.getTunerSkinName(skinIndex));
 
 					// update the value in the preferences:
 					SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).edit();
 					edit.putInt(getString(R.string.pref_skinIndex), skinIndex);
 					edit.apply();
 
+					if(handheldNode != null) {
+						PreferenceSyncHelper.syncIntegerPref(googleApiClient, handheldNode.getId(), getString(R.string.pref_skinIndex), skinIndex);
+					}
 					returnToMainActivity();
 				}
 			});
@@ -169,7 +234,7 @@ public class SettingsActivity extends Activity {
 		public void setSkinIndex(int index) {
 			this.skinIndex = index;
 			if(iv_thumbnail != null)
-				iv_thumbnail.setImageResource(roundScreen ? TUNER_SKIN_THUMBNAILS_ROUND[skinIndex] : TUNER_SKIN_THUMBNAILS_RECT[skinIndex]);
+				iv_thumbnail.setImageResource(TunerSkin.getTunerSkinThumbnailResource(skinIndex, roundScreen));
 		}
 	}
 

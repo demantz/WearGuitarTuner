@@ -118,6 +118,7 @@ public class GuitarTuner {
 
 		// inform the callback interface about updated values:
 		callbackInterface.process(this);
+
 	}
 
 	/**

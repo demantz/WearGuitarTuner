@@ -2,38 +2,95 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:paddingBottom="@dimen/activity_vertical_margin"
                 tools:context="com.mantz_it.wearguitartuner.MainActivity"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:background="@color/dark_background_color">
 
-    <TextView
-        android:text="@string/welcome_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20dp"/>
-
-    <Button
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/button_showLog"
-        android:id="@+id/bt_showLog"
-        android:onClick="onBtShowLogClicked"/>
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:layout_margin="10dp"
+        android:elevation="20dp"
+        android:background="@color/light_background_color"
+        android:visibility="gone"
+        android:id="@+id/ll_welcomeCard">
+        <TextView
+            android:text="@string/welcome_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18dp"
+            android:padding="10dp"
+            android:textColor="@color/light_text_color"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/light_background_color"
+            android:textColor="@color/light_highlight_color"
+            android:text="I got it!"
+            android:padding="10dp"
+            android:onClick="onBtHideWelcomeMsgClicked"/>
+    </LinearLayout>
 
-    <Button
+    <FrameLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:background="@color/light_foreground_color"
+        android:layout_margin="10dp"
+        android:layout_gravity="center"
+        android:id="@+id/fl_preview">
+    </FrameLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/button_shareLog"
-        android:enabled="false"
-        android:id="@+id/bt_shareLog"
-        android:onClick="onBtShareLogClicked"/>
+        android:layout_margin="10dp"
+        android:padding="5dp"
+        android:background="@color/light_background_color"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose a Skin:"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:textColor="@color/light_foreground_color"/>
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/tv_log"
-        android:scrollbars="vertical"/>
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/ll_skinChooser">
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="5dp"
+        android:layout_margin="10dp"
+        android:elevation="10dp"
+        android:background="@color/light_background_color">
+
+        <Switch
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Vibration enabled"
+            android:id="@+id/sw_vibrate"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:background="@color/light_background_color"
+            android:textColor="@color/light_foreground_color"/>
+
+    </LinearLayout>
+
 
 </LinearLayout>

@@ -2,8 +2,17 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.mantz_it.wearguitartuner.MainActivity">
-    <item android:id="@+id/action_settings"
-          android:title="@string/action_settings"
+    <item android:id="@+id/action_showHandheldLog"
+          android:title="@string/action_showHandheldLog"
           android:orderInCategory="100"
           app:showAsAction="never"/>
+    <item android:id="@+id/action_showWearableLog"
+          android:title="@string/action_showWearableLog"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+    <item android:id="@+id/action_donate"
+          android:title="@string/action_donate"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+
 </menu>

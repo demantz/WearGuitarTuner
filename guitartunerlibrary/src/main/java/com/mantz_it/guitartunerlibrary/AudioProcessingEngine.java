@@ -83,7 +83,7 @@ public class AudioProcessingEngine extends Thread{
 		int minBufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
 				RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
 		Log.d(LOGTAG, "constructor: min. buffer size is " + minBufferSize);
-		int audioBufferSize = Math.max(minBufferSize, BUFFER_SIZE * RECORDER_ELEMENT_SIZE * 2);
+		int audioBufferSize = Math.max(minBufferSize, BUFFER_SIZE * RECORDER_ELEMENT_SIZE) * 2;
 
 		// initialize the AudioRecord instance
 		audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, RECORDER_SAMPLERATE, RECORDER_CHANNELS,
@@ -114,7 +114,6 @@ public class AudioProcessingEngine extends Thread{
 				break;
 			}
 			Log.d(LOGTAG, "run: audioBuffer: " + audioBuffer[0] + ", " + audioBuffer[1] + ", " + audioBuffer[2] + ", ..., " + audioBuffer[500]);
-			Log.d(LOGTAG, "run: oldAudioBuffer: " + oldAudioBuffer[0] + ", " + oldAudioBuffer[1] + ", " + oldAudioBuffer[2] + ", ..., " + oldAudioBuffer[500]);
 
 			// WORKAROUND
 			// Issue: It happens very often that the recording stops working while running.
@@ -128,10 +127,8 @@ public class AudioProcessingEngine extends Thread{
 			// So we check for that and restart the recording if necessary:
 			boolean buffersEqual = true;
 			for (int i = 0; i < audioBuffer.length; i++) {
-				if(buffersEqual && audioBuffer[i] != oldAudioBuffer[i]) {
-					System.out.println("Index " + i + " is unequal!");
+				if(buffersEqual && audioBuffer[i] != oldAudioBuffer[i])
 					buffersEqual = false;
-				}
 				oldAudioBuffer[i] = audioBuffer[i];
 			}
 			if(buffersEqual) {
