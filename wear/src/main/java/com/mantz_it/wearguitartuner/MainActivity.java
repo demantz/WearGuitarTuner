@@ -70,22 +70,18 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		fl_root = (FrameLayout) findViewById(R.id.fl_root);
+		tunerSurface = (TunerSurface) findViewById(R.id.sv_tunerSurface);
+		tunerSurface.setZOrderOnTop(true);	// WORKAROUND (see: https://code.google.com/p/android/issues/detail?id=82985)
 		fl_root.setOnApplyWindowInsetsListener(this);	// register for this event to detect round/rect screen
 
 		// Get reference to the shared preferences:
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		preferences.registerOnSharedPreferenceChangeListener(this);
 		roundScreen = preferences.getBoolean(getString(R.string.pref_roundScreen), false);
-
-		// Create the tuner surface:
-		tunerSurface = new TunerSurface(MainActivity.this);
 		tunerSurface.setRound(roundScreen);
 
 		// Create a GuitarTuner instance:
 		guitarTuner = new GuitarTuner(tunerSurface, (Vibrator) getSystemService(VIBRATOR_SERVICE));
-
-		// Add the surface view to the root frameLayout:
-		fl_root.addView(tunerSurface);
 
 		// Initialize the gesture detector
 		gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
@@ -111,11 +107,11 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
 		if(insets.isRound()) {
 			roundScreen = true;
-			Log.i(LOGTAG, "onCreate: detected a round Screen!");
+			Log.i(LOGTAG, "onApplyWindowInsets: detected a round Screen!");
 		}
 		else {
 			roundScreen = false;
-			Log.i(LOGTAG, "onCreate: detected a rectangular Screen!");
+			Log.i(LOGTAG, "onApplyWindowInsets: detected a rectangular Screen!");
 		}
 
 		// Update the value in the preferences:
@@ -140,6 +136,12 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	@Override
+	protected void onRestart() {
+		super.onRestart();
+		Log.d(LOGTAG, "onRestart: deactivate workaround!");
+	}
+
+	@Override
 	protected void onStart() {
 		super.onStart();
 		Log.d(LOGTAG, "onStart");
@@ -158,12 +160,6 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 
 		// connect the google api client:
 		googleApiClient.connect();
-	}
-
-	@Override
-	protected void onRestart() {
-		super.onRestart();
-		Log.d(LOGTAG, "onRestart");
 	}
 
 	@Override

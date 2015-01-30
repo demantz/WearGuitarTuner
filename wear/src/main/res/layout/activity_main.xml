@@ -4,4 +4,10 @@
              android:layout_height="match_parent"
              android:id="@+id/fl_root"
              android:keepScreenOn="true">
+    <view
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        class="com.mantz_it.guitartunerlibrary.TunerSurface"
+        android:id="@+id/sv_tunerSurface"
+        android:layout_margin="1px"/> <!-- WORKAROUND -->
 </FrameLayout>

@@ -42,7 +42,6 @@ public class AudioProcessingEngine extends Thread{
 	private static final int FFT_SIZE = 1024 * 32;
 	private float[] lookupTable;
 	private short[] audioBuffer;
-	private short[] oldAudioBuffer; 	// part of a workaround
 	private float[] realSamples;
 	private float[] imagSamples;
 	private float[] mag;
@@ -91,7 +90,6 @@ public class AudioProcessingEngine extends Thread{
 
 		// allocate the buffers:
 		audioBuffer = new short[BUFFER_SIZE];
-		oldAudioBuffer = new short[BUFFER_SIZE];
 		realSamples = new float[FFT_SIZE];
 		imagSamples = new float[FFT_SIZE];
 		mag = new float[FFT_SIZE / 2];
@@ -114,30 +112,6 @@ public class AudioProcessingEngine extends Thread{
 				break;
 			}
 			Log.d(LOGTAG, "run: audioBuffer: " + audioBuffer[0] + ", " + audioBuffer[1] + ", " + audioBuffer[2] + ", ..., " + audioBuffer[500]);
-
-			// WORKAROUND
-			// Issue: It happens very often that the recording stops working while running.
-			//        On the log appears the message:
-			//			E/audio_hw_primary(  181): pcm_read error -1
-			//			E/audio_hw_primary(  181): pcm_read error -16
-			//			E/audio_hw_primary(  181): pcm_read error -16
-			//			E/audio_hw_primary(  181): pcm_read error -16
-			// Problem is that the read() method does not report an error.
-			// However, the audioBuffer will contain exactly the samples from the old read() call.
-			// So we check for that and restart the recording if necessary:
-			boolean buffersEqual = true;
-			for (int i = 0; i < audioBuffer.length; i++) {
-				if(buffersEqual && audioBuffer[i] != oldAudioBuffer[i])
-					buffersEqual = false;
-				oldAudioBuffer[i] = audioBuffer[i];
-			}
-			if(buffersEqual) {
-				// Stop recording:
-				Log.w(LOGTAG, "run: WORKAROUND! Restarting recording!");
-				audioRecord.stop();
-				audioRecord.startRecording();
-			}
-			// /WORKAROUND
 
 			// convert the shorts to floats and zero the imagSamples buffer:
 			for (int i = 0; i < realSamples.length; i++) {

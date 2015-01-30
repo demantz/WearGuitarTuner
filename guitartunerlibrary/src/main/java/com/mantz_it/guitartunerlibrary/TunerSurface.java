@@ -2,6 +2,7 @@ package com.mantz_it.guitartunerlibrary;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -35,19 +36,18 @@ import android.view.SurfaceView;
 public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTunerCallbackInterface, SurfaceHolder.Callback {
 	private static final String LOGTAG = "TunerSurface";
 	private TunerSkin tunerSkin;
-	private int width;
-	private int height;
+	private int width = -1;
+	private int height = -1;
 	private boolean round;
 
-	public TunerSurface(Context context) {
-		super(context);
+	public TunerSurface(Context context, AttributeSet attributeSet) {
+		super(context, attributeSet);
 		// Add a Callback to get informed when the dimensions of the SurfaceView changes:
 		this.getHolder().addCallback(this);
 	}
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-
 	}
 
 	@Override
@@ -60,7 +60,6 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-
 	}
 
 	public void setRound(boolean round) {
@@ -77,8 +76,15 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 
 	@Override
 	public void process(GuitarTuner guitarTuner) {
-		if(!this.getHolder().getSurface().isValid())
+		if(!this.getHolder().getSurface().isValid()) {
 			Log.d(LOGTAG, "process: Surface is not valid!");
+			return;
+		}
+
+		if(height < 0 || width < 0) {
+			Log.d(LOGTAG, "process: height and width are not yet set!");
+			return;
+		}
 
 		// Draw:
 		Canvas c = null;
