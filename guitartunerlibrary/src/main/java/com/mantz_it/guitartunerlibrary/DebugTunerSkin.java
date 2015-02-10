@@ -60,7 +60,7 @@ public class DebugTunerSkin extends TunerSkin {
 		// Draw detected (relevant) frequency component and pitch + debug info
 		if (tuner.getDetectedFrequency() > 0) {
 			float detectedFrequency = tuner.getDetectedFrequency();
-			int pitchIndex = tuner.frequencyToPitchIndex(detectedFrequency);
+			int pitchIndex = tuner.getTargetPitchIndex();
 			Paint paint = tuner.isValid() ? foregroundPaint : invalidPaint;
 
 			// draw a line at the detected pitch:

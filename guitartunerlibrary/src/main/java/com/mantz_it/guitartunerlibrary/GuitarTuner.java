@@ -43,12 +43,16 @@ public class GuitarTuner {
 
 	private float[] mag;					// magnitudes of the spectrum
 	private float[] hps;					// harmonic product spectrum
+	private float updateRate;				// indicates how often processFFTSamples() will be called per second
+	private long lastUpdateTimestamp;		// time of the last call to processFFTSamples()
 	private float hzPerSample;				// frequency step of one index in mag
 	private float strongestFrequency;		// holds the frequency of the strongest (max mag) frequency component (after HPS)
 	private float detectedFrequency;		// holds the frequency that was calculated to be the most likely/relevant frequency component
 	private float targetFrequency;			// desired frequency to tune to
+	private int targetPitchIndex;			// pitch index of the targetFrequency
 	private int pitchHoldCounter = 0;		// number of cycles the same pitch was detected in series.
 	private float lastDetectedFrequency;	// detected frequency of the last cycle
+	private float lastTargetFrequency;		// target frequency of the last cycle
 	private boolean valid;					// indicates if the current result is valid
 	private boolean vibrate = false;		// on/off switch for the vibration feedback
 
@@ -57,7 +61,9 @@ public class GuitarTuner {
 		this.vibrator = vibrator;
 	}
 
-	public void processFFTSamples(float[] mag, int sampleRate) {
+	public boolean processFFTSamples(float[] mag, int sampleRate, float updateRate) {
+		this.lastUpdateTimestamp = System.currentTimeMillis();
+		this.updateRate = updateRate;
 		this.mag = mag;
 		hzPerSample = ((float)(sampleRate / 2)) / mag.length;
 
@@ -82,7 +88,8 @@ public class GuitarTuner {
 
 		// detect the relevant frequency component:
 		detectedFrequency = strongestFrequency; 	// DEBUG
-		targetFrequency = pitchIndexToFrequency(frequencyToPitchIndex(detectedFrequency));
+		targetPitchIndex = frequencyToPitchIndex(detectedFrequency);
+		targetFrequency = pitchIndexToFrequency(targetPitchIndex);
 		valid = detectedFrequency >= pitchIndexToFrequency(0);
 
 		// check against the results of the past cycles:
@@ -93,16 +100,15 @@ public class GuitarTuner {
 			Log.d(LOGTAG, "processFFTSamples: detected frequency differs from the last by " + detectedFrequency/lastDetectedFrequency*100 + "%");
 			pitchHoldCounter = 0;
 		}
-		lastDetectedFrequency = detectedFrequency;
 
-		// If we have a stable pitch since more than 3 cycles, give feedback to the user:
-		if(pitchHoldCounter > 3) {
-			if(detectedFrequency < targetFrequency*0.99) {
+		// If we have a stable pitch since more than 2 cycles, give feedback to the user:
+		if(pitchHoldCounter > 2) {
+			if(detectedFrequency < getLowerToleranceBoundaryFrequency(targetPitchIndex)) {
 				Log.i(LOGTAG, "processFFTSamples: Result: Tune up by " + (targetFrequency-detectedFrequency) + " Hz! "
 								+ "Target frequency is " + targetFrequency + " Hz.");
 				if(vibrate)
 					vibrator.vibrate(VIBRATE_PATTERN_UP, -1);
-			} else if(detectedFrequency > targetFrequency*1.01) {
+			} else if(detectedFrequency > getUpperToleranceBoundaryFrequency(targetPitchIndex)) {
 				Log.i(LOGTAG, "processFFTSamples: Result: Tune down by " + (detectedFrequency-targetFrequency) + " Hz! "
 								+ "Target frequency is " + targetFrequency + " Hz.");
 				if(vibrate)
@@ -117,8 +123,11 @@ public class GuitarTuner {
 		}
 
 		// inform the callback interface about updated values:
-		callbackInterface.process(this);
+		boolean success = callbackInterface.process(this);
 
+		lastDetectedFrequency = detectedFrequency;
+		lastTargetFrequency = targetFrequency;
+		return success;
 	}
 
 	/**
@@ -187,6 +196,23 @@ public class GuitarTuner {
 		return letters;
 	}
 
+	public float getLowerToleranceBoundaryFrequency(int pitchIndex) {
+		float frequency = pitchIndexToFrequency(pitchIndex);
+		float nextLowerFrequency = pitchIndexToFrequency(pitchIndex-1);
+		return frequency - 0.05f * (frequency-nextLowerFrequency);
+	}
+
+	public float getUpperToleranceBoundaryFrequency(int pitchIndex) {
+		float frequency = pitchIndexToFrequency(pitchIndex);
+		float nextUpperFrequency = pitchIndexToFrequency(pitchIndex+1);
+		return frequency + 0.05f * (nextUpperFrequency-frequency);
+	}
+
+	public boolean isTuned() {
+		return detectedFrequency > getLowerToleranceBoundaryFrequency(targetPitchIndex)
+				&& detectedFrequency < getUpperToleranceBoundaryFrequency(targetPitchIndex);
+	}
+
 	public float getStrongestFrequency() {
 		return strongestFrequency;
 	}
@@ -197,6 +223,14 @@ public class GuitarTuner {
 
 	public float[] getHPS() {
 		return hps;
+	}
+
+	public float getUpdateRate() {
+		return updateRate;
+	}
+
+	public long getLastUpdateTimestamp() {
+		return lastUpdateTimestamp;
 	}
 
 	public float getHzPerSample() {
@@ -211,6 +245,10 @@ public class GuitarTuner {
 		return targetFrequency;
 	}
 
+	public int getTargetPitchIndex() {
+		return targetPitchIndex;
+	}
+
 	public boolean isValid() {
 		return valid;
 	}
@@ -223,8 +261,16 @@ public class GuitarTuner {
 		this.vibrate = vibrate;
 	}
 
+	public float getLastDetectedFrequency() {
+		return lastDetectedFrequency;
+	}
+
+	public float getLastTargetFrequency() {
+		return lastTargetFrequency;
+	}
+
 	public interface GuitarTunerCallbackInterface {
-		public void process(GuitarTuner guitarTuner);
+		public boolean process(GuitarTuner guitarTuner);
 	}
 
 }

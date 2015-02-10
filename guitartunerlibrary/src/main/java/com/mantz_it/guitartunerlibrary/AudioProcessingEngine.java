@@ -38,7 +38,7 @@ public class AudioProcessingEngine extends Thread{
 	private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
 	private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 	private static final int RECORDER_ELEMENT_SIZE = 2;	// 16-bit
-	private static final int BUFFER_SIZE = 1024 * 2;
+	private static final int BUFFER_SIZE = 1024 * 4;
 	private static final int FFT_SIZE = 1024 * 32;
 	private float[] lookupTable;
 	private short[] audioBuffer;
@@ -50,6 +50,8 @@ public class AudioProcessingEngine extends Thread{
 	private GuitarTuner guitarTuner;
 
 	private boolean stopRequested = true;
+	private int failCounter = 0;			// will cound how often the call to processFFTSamples()
+											// failed in a row
 
 	public AudioProcessingEngine(GuitarTuner guitarTuner) {
 		this.guitarTuner = guitarTuner;
@@ -138,7 +140,15 @@ public class AudioProcessingEngine extends Thread{
 			}
 
 			// pass the magnitude samples to the Guitar Tuner:
-			guitarTuner.processFFTSamples(mag, RECORDER_SAMPLERATE);
+			if(!guitarTuner.processFFTSamples(mag, RECORDER_SAMPLERATE, (float)RECORDER_SAMPLERATE/(float)BUFFER_SIZE))
+				failCounter++;
+			else
+				failCounter = 0;
+
+			if(failCounter > 10) {
+				Log.w(LOGTAG, "run: Calling processFFTSamples() failed 10 times in a row. stop.");
+				stopRequested = true;
+			}
 		}
 
 		// Stop recording:

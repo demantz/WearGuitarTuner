@@ -192,6 +192,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 		if(audioProcessingEngine != null) {
 			audioProcessingEngine.stopProcessing();
 			try {
+				audioProcessingEngine.interrupt();
 				audioProcessingEngine.join(250);
 			} catch (InterruptedException e) {
 				Log.e(LOGTAG, "onPause: Interrupted while joining audioProcessingEngine!");

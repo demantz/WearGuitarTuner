@@ -34,13 +34,16 @@ import android.graphics.Shader;
  */
 public class DefaultTunerSkin extends TunerSkin {
 
-	private Paint gradientPaint;
-	private static final float MAX_ANGLE = 0.8f; // max angle of the scale (measured from the midpoint in radian)
+	protected Paint gradientPaint;
+	protected static final float MAX_ANGLE = 0.8f; // max angle of the scale (measured from the midpoint in radian)
+	protected static final float SIDE_LETTERS_X_POS = 0.7f;	// position of the side pitch letters. 0 is the middle of the
+															// screen and 1 is the left/right edge of the screen
 
 	public DefaultTunerSkin() {
 		super();
 		gradientPaint = new Paint();
 		gradientPaint.setAntiAlias(true);
+		animationEnabled = true;
 	}
 
 	@Override
@@ -49,54 +52,103 @@ public class DefaultTunerSkin extends TunerSkin {
 		foregroundPaint.setTextSize(height * 0.2f);
 		invalidPaint.setTextSize(height * 0.2f);
 		highlightPaint.setTextSize(height * 0.2f);
-		if(round)
-			gradientPaint.setTextSize(height * 0.15f);
-		else
-			gradientPaint.setTextSize(height * 0.2f);
+		gradientPaint.setTextSize(height * 0.2f);
 		gradientPaint.setShader(new LinearGradient(0, 0, width / 2, 0, Color.DKGRAY, Color.LTGRAY, Shader.TileMode.MIRROR));
 	}
 
 	@Override
 	public void setRound(boolean round) {
 		super.setRound(round);
-		if(round)
-			gradientPaint.setTextSize(height * 0.15f);
-		else
-			gradientPaint.setTextSize(height * 0.2f);
 	}
 
 	@Override
 	public void draw(Canvas c, GuitarTuner tuner) {
-		Paint paint = foregroundPaint;
-		if(tuner.getDetectedFrequency() > tuner.getTargetFrequency()*0.99 && tuner.getDetectedFrequency() < tuner.getTargetFrequency()*1.01)
-			paint = highlightPaint;
-		if(!tuner.isValid())
-			paint = invalidPaint;
+		draw(c, tuner, 0, 1);
+	}
 
+	@Override
+	public void draw(Canvas c, GuitarTuner tuner, int frameNumber, int framesPerCycle) {
 		// Clear the canvas
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
-		// draw pitch letters
-		// target pitch:
-		String text = tuner.pitchLetterFromIndex(tuner.frequencyToPitchIndex(tuner.getTargetFrequency()));
-		Rect boundsTargetPitch = new Rect();
-		paint.getTextBounds(text, 0, text.length(), boundsTargetPitch);
-		c.drawText(text, 0, text.length(), width/2 - boundsTargetPitch.width()/2, height*0.2f, paint);
-
-		// left and right pitch:
-		if(tuner.isValid()) {
-			float y = round ? height * 0.3f : height * 0.2f;
-			text = tuner.pitchLetterFromIndex(tuner.frequencyToPitchIndex(tuner.getTargetFrequency()) - 1);
-			Rect bounds = new Rect();
-			gradientPaint.getTextBounds(text, 0, text.length(), bounds);
-			c.drawText(text, 0, text.length(), width / 2 - boundsTargetPitch.width() / 2 - bounds.width() - width * 0.1f,
-							y, gradientPaint);
-
-			text = tuner.pitchLetterFromIndex(tuner.frequencyToPitchIndex(tuner.getTargetFrequency()) + 1);
-			c.drawText(text, 0, text.length(), width / 2 + boundsTargetPitch.width() / 2 + width * 0.1f, y, gradientPaint);
-		}
-
 		// draw scale (21 dashes)
+		drawScale(c);
+
+		if(tuner.isValid()) {
+			float targetFrequency = tuner.getTargetFrequency();
+			float lastTargetFrequency = tuner.getLastTargetFrequency();
+			int targetPitchIndex = tuner.getTargetPitchIndex();
+			int lastTargetPitchIndex = tuner.frequencyToPitchIndex(lastTargetFrequency);
+
+			// draw pitch letters
+			float letterOffset = 0;
+			if(targetPitchIndex == lastTargetPitchIndex + 1)
+				letterOffset = -((frameNumber+1)/(float)framesPerCycle) * SIDE_LETTERS_X_POS;		// shift letters to the left
+			else if (targetPitchIndex == lastTargetPitchIndex - 1)
+				letterOffset = ((frameNumber+1)/(float)framesPerCycle) * SIDE_LETTERS_X_POS;		// shift letters to the right
+			else if (targetPitchIndex != lastTargetPitchIndex) {
+				float tmp = 2f*frameNumber/(float)framesPerCycle - 1;
+				int alpha = (int) (255*tmp*tmp);
+				gradientPaint.setAlpha(alpha);		// fade the old letters out and the new ones in
+				foregroundPaint.setAlpha(alpha);	// also fade the needle
+			}
+
+			String centerLetter;
+			String leftLetter;
+			String rightLetter;
+			if(frameNumber < (float)framesPerCycle/2) {
+				centerLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex);
+				leftLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex - 1);
+				rightLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex + 1);
+			} else {
+				centerLetter = tuner.pitchLetterFromIndex(targetPitchIndex);
+				leftLetter = tuner.pitchLetterFromIndex(targetPitchIndex - 1);
+				rightLetter = tuner.pitchLetterFromIndex(targetPitchIndex + 1);
+				if(letterOffset > 0)
+					letterOffset -= SIDE_LETTERS_X_POS;
+				else if (letterOffset < 0)
+					letterOffset += SIDE_LETTERS_X_POS;
+			}
+			drawPitchLetter(c, centerLetter, letterOffset, gradientPaint);
+			drawPitchLetter(c, leftLetter, letterOffset - SIDE_LETTERS_X_POS, gradientPaint);
+			drawPitchLetter(c, rightLetter, letterOffset + SIDE_LETTERS_X_POS, gradientPaint);
+
+			// draw needle
+			float newAngle = (float) (MAX_ANGLE / (Math.pow(2,1/24f) - 1) * (tuner.getDetectedFrequency() / targetFrequency - 1));
+			float oldAngle = (float) (MAX_ANGLE / (Math.pow(2,1/24f) - 1) * (tuner.getLastDetectedFrequency() / lastTargetFrequency - 1));
+			float animationSpan = newAngle - oldAngle;		// we animate between the old angle and the new one...
+			if(targetPitchIndex > lastTargetPitchIndex && targetPitchIndex-lastTargetPitchIndex != 12)
+				animationSpan += 2*MAX_ANGLE;	// animate from old angle to top of scale and from the bottom of the scale to the new angle
+			else if (targetPitchIndex < lastTargetPitchIndex && lastTargetPitchIndex-targetPitchIndex != 12)
+				animationSpan -= 2*MAX_ANGLE;	// animate from old angle to bottom of scale and from the top of the scale to the new angle
+			float angle = oldAngle + ((frameNumber+1)/(float)framesPerCycle) * animationSpan;
+			if(angle > MAX_ANGLE)
+				angle = angle - 2 * MAX_ANGLE;
+			else if(angle < -MAX_ANGLE)
+				angle = angle + 2 * MAX_ANGLE;
+			drawNeedle(c, angle, tuner.isTuned() ? highlightPaint : foregroundPaint);
+
+			gradientPaint.setAlpha(255);	// reset alpha to default
+			foregroundPaint.setAlpha(255);
+		}
+	}
+
+	protected void drawPitchLetter(Canvas c, String letter, float position, Paint paint) {
+		Rect bounds = new Rect();
+		gradientPaint.getTextBounds(letter, 0, letter.length(), bounds);
+		float x = (position + 1)/2 * width - bounds.width()/2;
+		float y = height * 0.2f;
+		float textSize = paint.getTextSize();
+		if(round) {
+			// if the screen is round we lower the side letters and make them smaller:
+			y = height * (0.2f + 0.25f * position * position);
+			paint.setTextSize(textSize * (1 - 0.4f*Math.abs(position)));
+		}
+		c.drawText(letter, 0, letter.length(), x, y, paint);
+		paint.setTextSize(textSize);
+	}
+
+	protected void drawScale(Canvas c) {
 		c.drawLine(width/2, height*0.37f, width/2, height*0.27f, gradientPaint);
 		for (int i = 1; i < 11; i++) {
 			float dashLenght = i==10 ? height*0.1f : height*0.05f;
@@ -107,9 +159,9 @@ public class DefaultTunerSkin extends TunerSkin {
 			c.drawLine(width/2 + x0, height - y0, width/2 + x1, height - y1, gradientPaint);
 			c.drawLine(width/2 - x0, height - y0, width/2 - x1, height - y1, gradientPaint);
 		}
+	}
 
-		// draw needle
-		float angle = (float) (MAX_ANGLE / (Math.pow(2,1/24f) - 1) * (tuner.getDetectedFrequency() / tuner.getTargetFrequency() - 1));
+	protected void drawNeedle(Canvas c, float angle, Paint paint) {
 		float x = (float) Math.sin(angle) * height*0.58f;
 		float y = height*0.05f + (float) Math.cos(angle) * height*0.58f;
 		c.drawCircle(width/2, height*0.95f, height*0.01f, paint);

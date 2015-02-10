@@ -75,18 +75,30 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 	}
 
 	@Override
-	public void process(GuitarTuner guitarTuner) {
+	public boolean process(GuitarTuner guitarTuner) {
 		if(!this.getHolder().getSurface().isValid()) {
 			Log.d(LOGTAG, "process: Surface is not valid!");
-			return;
+			return false;
 		}
 
 		if(height < 0 || width < 0) {
 			Log.d(LOGTAG, "process: height and width are not yet set!");
-			return;
+			return false;
 		}
 
-		// Draw:
+		if(tunerSkin == null) {
+			Log.d(LOGTAG, "process: tunerSkin is null!");
+			return false;
+		}
+
+		if(tunerSkin.isAnimationEnabled())
+			animatedDraw(guitarTuner);
+		else
+			draw(guitarTuner);
+		return true;
+	}
+
+	private void draw(GuitarTuner guitarTuner) {
 		Canvas c = null;
 		try {
 			c = this.getHolder().lockCanvas();
@@ -94,10 +106,7 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 			synchronized (this.getHolder()) {
 				if(c != null) {
 					// Draw
-					if(tunerSkin != null)
-						tunerSkin.draw(c, guitarTuner);
-					else
-						Log.d(LOGTAG, "draw: Skin is null.");
+					tunerSkin.draw(c, guitarTuner);
 				} else
 					Log.d(LOGTAG, "draw: Canvas is null.");
 			}
@@ -109,6 +118,56 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 			if (c != null) {
 				this.getHolder().unlockCanvasAndPost(c);
 			}
+		}
+	}
+
+	private void animatedDraw(GuitarTuner guitarTuner) {
+		float updateRate = guitarTuner.getUpdateRate();
+		int framesToDraw = (int)(tunerSkin.getDesiredRefreshRate() / updateRate + 1);
+		int millisPerCycle = (int) (1000 / updateRate);
+		int millisPerFrame = millisPerCycle / framesToDraw;
+		long frameStartTime = guitarTuner.getLastUpdateTimestamp();
+
+		for(int i = 0; i < framesToDraw; i++) {
+			// Check if we exceeded the time for the current cycle
+			if(System.currentTimeMillis() > guitarTuner.getLastUpdateTimestamp() + millisPerCycle) {
+				Log.d(LOGTAG, "animatedDraw: Exceeded cycle time during animation!");
+				return;
+			}
+
+			// Draw Frame
+			Canvas c = null;
+			try {
+				c = this.getHolder().lockCanvas();
+
+				synchronized (this.getHolder()) {
+					if(c != null) {
+						// Draw
+						tunerSkin.draw(c, guitarTuner, i, framesToDraw);
+					} else
+						Log.d(LOGTAG, "animatedDraw: Canvas is null.");
+				}
+			} catch (Exception e)
+			{
+				Log.e(LOGTAG, "animatedDraw: Error while drawing on the canvas: " + e.getMessage());
+			} finally {
+				if (c != null) {
+					this.getHolder().unlockCanvasAndPost(c);
+				}
+			}
+
+			// Sleep til the next frame starts:
+			int sleepTime = (int) (frameStartTime + millisPerFrame - System.currentTimeMillis());
+			if(sleepTime > 0) {
+				try {
+					//Log.d(LOGTAG, "animatedDraw: Sleep for " + sleepTime + "ms after Frame " + i);
+					Thread.sleep(sleepTime);
+				} catch (InterruptedException e) {
+					Log.d(LOGTAG, "animatedDraw: Interrupted while waiting for the next frame: " + e.getMessage());
+					return;
+				}
+			}
+			frameStartTime += millisPerFrame;
 		}
 	}
 }

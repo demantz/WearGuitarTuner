@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 
 /**
  * <h1>Wear Guitar Tuner - Tuner Skin</h1>
@@ -43,7 +44,8 @@ public abstract class TunerSkin {
 	protected int width;
 	protected int height;
 	protected boolean round = false;
-	protected int desiredRefreshRate = -1;	// refreshRate of the Surface in ms
+	protected int desiredRefreshRate = 30;	// refreshRate of the Surface in fps
+	protected boolean animationEnabled = false;
 
 	public TunerSkin() {
 		// Initialize paint objects:
@@ -79,7 +81,16 @@ public abstract class TunerSkin {
 		return desiredRefreshRate;
 	}
 
+	public boolean isAnimationEnabled() {
+		return animationEnabled && desiredRefreshRate > 0;
+	}
+
 	public abstract void draw(Canvas c, GuitarTuner tuner);
+
+	public void draw(Canvas c, GuitarTuner tuner, int frameNumber, int framesPerCycle) {
+		Log.w("TunerSkin", "draw: Animated draw is not supported by this skin!");
+		draw(c, tuner);
+	}
 
 
 	// STATIC methods for easy handling of all available skins:

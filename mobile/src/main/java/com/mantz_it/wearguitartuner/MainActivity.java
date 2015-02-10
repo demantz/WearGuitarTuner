@@ -104,6 +104,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
 		ll_welcomeCard = (LinearLayout) findViewById(R.id.ll_welcomeCard);
 		fl_preview = (FrameLayout) findViewById(R.id.fl_preview);
+		tunerSurface = (TunerSurface) findViewById(R.id.sv_tunerSurface);
 		ll_skinChooser = (LinearLayout) findViewById(R.id.ll_skinChooser);
 		sw_vibrate = (Switch) findViewById(R.id.sw_vibrate);
 		sw_vibrate.setChecked(preferences.getBoolean(getString(R.string.pref_vibration_enabled), true));
@@ -122,10 +123,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 			iv_skins[i].setClickable(true);
 			ll_skinChooser.addView(iv_skins[i]);
 		}
-
-		// Create a TunerSurface for the surface
-		tunerSurface = new TunerSurface(this);
-		fl_preview.addView(tunerSurface);
 
 		// Create a GuitarTuner instance:
 		guitarTuner = new GuitarTuner(tunerSurface, (Vibrator) getSystemService(VIBRATOR_SERVICE));
@@ -173,6 +170,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		if(audioProcessingEngine != null) {
 			audioProcessingEngine.stopProcessing();
 			try {
+				audioProcessingEngine.interrupt();
 				audioProcessingEngine.join(250);
 			} catch (InterruptedException e) {
 				Log.e(LOGTAG, "onPause: Interrupted while joining audioProcessingEngine!");
@@ -437,7 +435,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		edit.apply();
 
 		// send message to wearable:
-		PreferenceSyncHelper.syncIntegerPref(googleApiClient, wearableNode.getId(),
-				getString(R.string.pref_skinIndex), v.getId());
+		if(wearableNode != null) {
+			PreferenceSyncHelper.syncIntegerPref(googleApiClient, wearableNode.getId(),
+					getString(R.string.pref_skinIndex), v.getId());
+		}
 	}
 }
