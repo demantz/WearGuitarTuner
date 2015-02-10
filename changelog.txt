@@ -1,0 +1,9 @@
+CHANGELOG - Wear Guitar Tuner
+
+version 1.01
+ - First released version. Might be unstable.
+ - 3 skins: default, vintage needle and debug skin
+ - Skin can be changed on the wearable or on the handheld
+ - Settings are synced between wearable and handheld
+ - Vibration feedback (can be disabled)
+ - Available languages: English and German

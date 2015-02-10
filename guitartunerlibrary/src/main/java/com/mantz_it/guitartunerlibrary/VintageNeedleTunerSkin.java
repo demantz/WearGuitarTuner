@@ -66,7 +66,7 @@ public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 	@Override
 	public void setRound(boolean round) {
 		super.setRound(round);
-		
+
 		// Load skin background and scale it to the surface dimensions
 		if(width > 0 && height > 0) {
 			if(round)

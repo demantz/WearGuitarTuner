@@ -4,9 +4,6 @@
 
     <uses-feature android:name="android.hardware.type.watch" />
 
-    <!-- Write external storage is used to write log files to the SD card -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
