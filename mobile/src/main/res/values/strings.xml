@@ -23,5 +23,12 @@ Companion App and hit \'Resync Apps\' in the Settings.</string>
     <string name="chooseMailApp">Choose the App to share the log file</string>
     <string name="googleApiClient_not_connected">The google API client is not connected!</string>
     <string name="wearable_node_not_connected">The wearable node is not connected!</string>
+    <string name="loading">Loading</string>
+    <string name="querying_wearable_for_log">Querying wearable device for the log...</string>
+    <string name="failed_to_query_wearable_for_log">Failed to query the wearable device for the log:</string>
+    <string name="handheld_log">Handheld Log</string>
+    <string name="share">Share</string>
+    <string name="cancel">Cancel</string>
+    <string name="wearable_log">Wearable Log</string>
 
 </resources>

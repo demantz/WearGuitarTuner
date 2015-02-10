@@ -6,8 +6,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Shader;
 
 /**
@@ -35,18 +33,16 @@ import android.graphics.Shader;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-public class VintageNeedleTunerSkin extends TunerSkin {
+public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 
-	private Paint gradientPaint;
 	private Resources resources;
 	private Bitmap scaledBackground;
-	private static final float MAX_ANGLE = 0.8f; // max angle of the scale (measured from the midpoint in radian)
 
 	public VintageNeedleTunerSkin(Resources resources) {
 		super();
-		gradientPaint = new Paint();
-		gradientPaint.setAntiAlias(true);
 		this.resources = resources;
+		sideLettersPosition = 0.45f;
+		maxAngle = 0.6f;
 	}
 
 	@Override
@@ -55,60 +51,100 @@ public class VintageNeedleTunerSkin extends TunerSkin {
 		foregroundPaint.setTextSize(height * 0.15f);
 		invalidPaint.setTextSize(height * 0.15f);
 		highlightPaint.setTextSize(height * 0.15f);
-		if(round)
-			gradientPaint.setTextSize(height * 0.1f);
-		else
-			gradientPaint.setTextSize(height * 0.15f);
-		gradientPaint.setShader(new LinearGradient(0, 0, width / 2, 0, Color.DKGRAY, Color.LTGRAY, Shader.TileMode.MIRROR));
-		if(width > 0 && height > 0)
-			scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin), width, height, false);
+		gradientPaint.setTextSize(height * 0.12f);
+		gradientPaint.setShader(new LinearGradient(width/5, 0, width / 2, 0, Color.DKGRAY, Color.LTGRAY, Shader.TileMode.MIRROR));
+
+		// Load skin background and scale it to the surface dimensions
+		if(width > 0 && height > 0) {
+			if(round)
+				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_round), width, height, false);
+			else
+				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_rect), width, height, false);
+		}
 	}
 
 	@Override
 	public void setRound(boolean round) {
 		super.setRound(round);
-		if(round)
-			gradientPaint.setTextSize(height * 0.15f);
-		else
-			gradientPaint.setTextSize(height * 0.2f);
+		
+		// Load skin background and scale it to the surface dimensions
+		if(width > 0 && height > 0) {
+			if(round)
+				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_round), width, height, false);
+			else
+				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_rect), width, height, false);
+		}
+	}
+
+	public void draw(Canvas c, GuitarTuner tuner) {
+		draw(c, tuner, 0, 1);
 	}
 
 	@Override
-	public void draw(Canvas c, GuitarTuner tuner) {
-		Paint paint = foregroundPaint;
-		if(tuner.getDetectedFrequency() > tuner.getTargetFrequency()*0.99 && tuner.getDetectedFrequency() < tuner.getTargetFrequency()*1.01)
-			paint = highlightPaint;
-		if(!tuner.isValid())
-			paint = invalidPaint;
-
+	public void draw(Canvas c, GuitarTuner tuner, int frameNumber, int framesPerCycle) {
 		// Clear the canvas
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
-		// draw pitch letters
-		// target pitch:
-		String text = tuner.pitchLetterFromIndex(tuner.frequencyToPitchIndex(tuner.getTargetFrequency()));
-		Rect boundsTargetPitch = new Rect();
-		paint.getTextBounds(text, 0, text.length(), boundsTargetPitch);
-		c.drawText(text, 0, text.length(), width/2 - boundsTargetPitch.width()/2, height*0.5f, paint);
-
 		// draw scale (21 dashes)
-		c.drawLine(width/2, height*0.37f, width/2, height*0.27f, gradientPaint);
-		for (int i = 1; i < 11; i++) {
-			float dashLength = i==10 ? height*0.1f : height*0.05f;
-			float x0 = (float) Math.sin(MAX_ANGLE * i / 10) * height*0.58f;
-			float x1 = (float) Math.sin(MAX_ANGLE * i / 10) * (height*0.58f + dashLength);
-			float y0 = height*0.05f + (float) Math.cos(MAX_ANGLE * i / 10) * height*0.58f;
-			float y1 = height*0.05f + (float) Math.cos(MAX_ANGLE * i / 10) * (height*0.58f + dashLength);
-			c.drawLine(width/2 + x0, height - y0, width/2 + x1, height - y1, gradientPaint);
-			c.drawLine(width/2 - x0, height - y0, width/2 - x1, height - y1, gradientPaint);
-		}
+		drawScale(c);
 
-		// draw needle
-		float angle = (float) (MAX_ANGLE / (Math.pow(2,1/24f) - 1) * (tuner.getDetectedFrequency() / tuner.getTargetFrequency() - 1));
-		float x = (float) Math.sin(angle) * height*0.58f;
-		float y = height*0.05f + (float) Math.cos(angle) * height*0.58f;
-		c.drawCircle(width/2, height*0.95f, height*0.01f, paint);
-		c.drawLine(width/2, height*0.95f, width/2 + x, height - y, paint);
+		if(tuner.isValid()) {
+			float targetFrequency = tuner.getTargetFrequency();
+			float lastTargetFrequency = tuner.getLastTargetFrequency();
+			int targetPitchIndex = tuner.getTargetPitchIndex();
+			int lastTargetPitchIndex = tuner.frequencyToPitchIndex(lastTargetFrequency);
+
+			// draw pitch letters
+			float letterOffset = 0;
+			if(targetPitchIndex == lastTargetPitchIndex + 1)
+				letterOffset = -((frameNumber+1)/(float)framesPerCycle) * sideLettersPosition;		// shift letters to the left
+			else if (targetPitchIndex == lastTargetPitchIndex - 1)
+				letterOffset = ((frameNumber+1)/(float)framesPerCycle) * sideLettersPosition;		// shift letters to the right
+			else if (targetPitchIndex != lastTargetPitchIndex) {
+				float tmp = 2f*frameNumber/(float)framesPerCycle - 1;
+				int alpha = (int) (255*tmp*tmp);
+				gradientPaint.setAlpha(alpha);		// fade the old letters out and the new ones in
+				foregroundPaint.setAlpha(alpha);	// also fade the needle
+			}
+
+			String centerLetter;
+			String leftLetter;
+			String rightLetter;
+			if(frameNumber < (float)framesPerCycle/2) {
+				centerLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex);
+				leftLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex - 1);
+				rightLetter = tuner.pitchLetterFromIndex(lastTargetPitchIndex + 1);
+			} else {
+				centerLetter = tuner.pitchLetterFromIndex(targetPitchIndex);
+				leftLetter = tuner.pitchLetterFromIndex(targetPitchIndex - 1);
+				rightLetter = tuner.pitchLetterFromIndex(targetPitchIndex + 1);
+				if(letterOffset > 0)
+					letterOffset -= sideLettersPosition;
+				else if (letterOffset < 0)
+					letterOffset += sideLettersPosition;
+			}
+			drawPitchLetter(c, centerLetter, letterOffset, 0.48f, true, gradientPaint);
+			drawPitchLetter(c, leftLetter, letterOffset - sideLettersPosition, 0.48f, true, gradientPaint);
+			drawPitchLetter(c, rightLetter, letterOffset + sideLettersPosition, 0.48f, true, gradientPaint);
+
+			// draw needle
+			float newAngle = (float) (maxAngle / (Math.pow(2,1/24f) - 1) * (tuner.getDetectedFrequency() / targetFrequency - 1));
+			float oldAngle = (float) (maxAngle / (Math.pow(2,1/24f) - 1) * (tuner.getLastDetectedFrequency() / lastTargetFrequency - 1));
+			float animationSpan = newAngle - oldAngle;		// we animate between the old angle and the new one...
+			if(targetPitchIndex > lastTargetPitchIndex && targetPitchIndex-lastTargetPitchIndex != 12)
+				animationSpan += 2* maxAngle;	// animate from old angle to top of scale and from the bottom of the scale to the new angle
+			else if (targetPitchIndex < lastTargetPitchIndex && lastTargetPitchIndex-targetPitchIndex != 12)
+				animationSpan -= 2* maxAngle;	// animate from old angle to bottom of scale and from the top of the scale to the new angle
+			float angle = oldAngle + ((frameNumber+1)/(float)framesPerCycle) * animationSpan;
+			if(angle > maxAngle)
+				angle = angle - 2 * maxAngle;
+			else if(angle < -maxAngle)
+				angle = angle + 2 * maxAngle;
+			drawNeedle(c, angle, tuner.isTuned() ? highlightPaint : foregroundPaint);
+
+			gradientPaint.setAlpha(255);	// reset alpha to default
+			foregroundPaint.setAlpha(255);
+		}
 
 		// draw the background over the canvas :
 		if(scaledBackground != null)

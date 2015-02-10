@@ -69,7 +69,9 @@ import java.io.UnsupportedEncodingException;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks,
-		GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener, SharedPreferences.OnSharedPreferenceChangeListener, CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+		GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener, NodeApi.NodeListener,
+		SharedPreferences.OnSharedPreferenceChangeListener,
+		CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 	private static final String LOGTAG = "MainActivity";
 	private LinearLayout ll_welcomeCard;
 	private LinearLayout ll_skinChooser;
@@ -205,8 +207,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 			}
 		});
 
-		// Register message listener:
+		// Register message and node listener:
 		Wearable.MessageApi.addListener(googleApiClient, this);		// will execute onMessageReceived() if a message arrives
+		Wearable.NodeApi.addListener(googleApiClient, this);		// will execute onPeerConnected() and onPeerDisconnected()
 	}
 
 	/**
@@ -225,6 +228,27 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		Log.d(LOGTAG, "onConnectionFailed: googleApiClient connection failed: " + result.toString());
 	}
 
+	/**
+	 * Gets called if a new node (a wearable) is connected to the phone
+	 */
+	@Override
+	public void onPeerConnected(Node node) {
+		Log.i(LOGTAG, "onPeerConnected: Node " + node.getId() + " connected!");
+		wearableNode = node;
+	}
+
+	/**
+	 * Gets called if a node (a wearable) disconnects from the phone
+	 */
+	@Override
+	public void onPeerDisconnected(Node node) {
+		Log.i(LOGTAG, "onPeerDisconnected: Node " + node.getId() + " has disconnected!");
+		if(wearableNode.getId().equals(node.getId())) {
+			Log.i(LOGTAG, "onPeerDisconnected: Setting wearable node to null!");
+			wearableNode = null;
+		}
+	}
+
 	@Override
 	public void onMessageReceived(MessageEvent messageEvent) {
 		Log.i(LOGTAG, "onMessageReceived: received a message (" + messageEvent.getPath() + ") from "
@@ -238,9 +262,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 					@Override
 					public void run() {
 						AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-								.setTitle("Wearable Log")
+								.setTitle(getString(R.string.wearable_log))
 								.setMessage(log)
-								.setPositiveButton("Share", new DialogInterface.OnClickListener() {
+								.setPositiveButton(getString(R.string.share), new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int whichButton) {
 										// Invoke email app:
 										Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "dennis.mantz@googlemail.com", null));
@@ -249,7 +273,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 										startActivity(Intent.createChooser(intent, getString(R.string.chooseMailApp)));
 									}
 								})
-								.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+								.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int whichButton) {
 										// do nothing
 									}
@@ -347,8 +371,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
 		if(progressDialog == null)
 			progressDialog = new ProgressDialog(this);
-		progressDialog.setTitle("Loading");
-		progressDialog.setMessage("Querying wearable device for the log...");
+		progressDialog.setTitle(getString(R.string.loading));
+		progressDialog.setMessage(getString(R.string.querying_wearable_for_log));
 		progressDialog.show();
 
 		// Send it to the wearable device:
@@ -359,10 +383,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 				if (!sendMessageResult.getStatus().isSuccess()) {
 					Log.e(LOGTAG, "queryWearableLog: Failed to query log from the wearable: "
 							+ sendMessageResult.getStatus().getStatusMessage());
-					Toast.makeText(MainActivity.this, "Failed to query log from the wearable: "
+					Toast.makeText(MainActivity.this, getString(R.string.failed_to_query_wearable_for_log)
 							+ sendMessageResult.getStatus().getStatusMessage(), Toast.LENGTH_LONG).show();
-				}
-				else
+					// dismiss process dialog:
+					if (progressDialog != null)
+						progressDialog.dismiss();
+				} else
 					Log.d(LOGTAG, "queryWearableLog: message (" + sendMessageResult.getRequestId() + ") was sent!");
 			}
 		});
@@ -388,9 +414,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		}
 		final String logString = log.toString();
 		new AlertDialog.Builder(MainActivity.this)
-				.setTitle("Handheld Log")
+				.setTitle(getString(R.string.handheld_log))
 				.setMessage(log)
-				.setPositiveButton("Share", new DialogInterface.OnClickListener() {
+				.setPositiveButton(getString(R.string.share), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						// Invoke email app:
 						Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "dennis.mantz@googlemail.com", null));
@@ -399,7 +425,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 						startActivity(Intent.createChooser(intent, getString(R.string.chooseMailApp)));
 					}
 				})
-				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+				.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						// do nothing
 					}

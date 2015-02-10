@@ -54,7 +54,8 @@ import com.mantz_it.guitartunerlibrary.TunerSkin;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-public class SettingsActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class SettingsActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
+		GoogleApiClient.OnConnectionFailedListener, NodeApi.NodeListener {
 	private static final String LOGTAG = "SettingsActivity";
 
 	private SharedPreferences preferences;
@@ -129,6 +130,9 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 				}
 			}
 		});
+
+		// Register node listener:
+		Wearable.NodeApi.addListener(googleApiClient, this);	// will execute onPeerConnected() and onPeerDisconnected()
 	}
 
 	/**
@@ -146,6 +150,28 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 	public void onConnectionFailed(ConnectionResult result) {
 		Log.d(LOGTAG, "onConnectionFailed: googleApiClient connection failed: " + result.toString());
 	}
+
+	/**
+	 * Gets called if a new node (a handheld) is connected to the watch
+	 */
+	@Override
+	public void onPeerConnected(Node node) {
+		Log.i(LOGTAG, "onPeerConnected: Node " + node.getId() + " connected!");
+		handheldNode = node;
+	}
+
+	/**
+	 * Gets called if a node (a handheld) disconnects from the watch
+	 */
+	@Override
+	public void onPeerDisconnected(Node node) {
+		Log.i(LOGTAG, "onPeerDisconnected: Node " + node.getId() + " has disconnected!");
+		if(handheldNode.getId().equals(node.getId())) {
+			Log.i(LOGTAG, "onPeerDisconnected: Setting wearable node to null!");
+			handheldNode = null;
+		}
+	}
+
 
 	public class SettingsGridViewPagerAdapter extends FragmentGridPagerAdapter {
 

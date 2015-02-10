@@ -25,4 +25,13 @@ synchronisieren\' unter den Einstellungen der Google Android Wear App.</string>
     <string name="action_donate">Spenden</string>
     <string name="action_showHandheldLog">Zeige Log des Telefons</string>
     <string name="action_showWearableLog">Zeige Log der Uhr</string>
+    <string name="googleApiClient_not_connected">Der Google API Client ist nicht verbunden!</string>
+    <string name="wearable_node_not_connected">Die Uhr ist nicht verbunden!</string>
+    <string name="loading">Laden</string>
+    <string name="querying_wearable_for_log">Uhr wird nach der Logdatai abgefragt...</string>
+    <string name="failed_to_query_wearable_for_log">Abfragen der Logdatei von der Uhr fehlgeschlagen: </string>
+    <string name="handheld_log">Log des Telefons</string>
+    <string name="share">Teilen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="wearable_log">Log der Uhr</string>
 </resources>

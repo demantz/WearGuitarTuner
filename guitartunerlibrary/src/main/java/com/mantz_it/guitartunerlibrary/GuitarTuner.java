@@ -3,6 +3,8 @@ package com.mantz_it.guitartunerlibrary;
 import android.os.Vibrator;
 import android.util.Log;
 
+import java.util.Locale;
+
 /**
  * <h1>Wear Guitar Tuner - Guitar Tuner</h1>
  *
@@ -181,7 +183,12 @@ public class GuitarTuner {
 		switch(index%12) {
 			case 0:  letters = "a" + octaveNumber; break;
 			case 1:  letters = "a" + octaveNumber + "#"; break;
-			case 2:  letters = "b" + octaveNumber; break;
+			case 2:
+				if(Locale.getDefault().getLanguage().equals("en"))
+					letters = "b" + octaveNumber;
+				else
+					letters = "h" + octaveNumber;
+				break;
 			case 3:  letters = "c" + octaveNumber; break;
 			case 4:  letters = "c" + octaveNumber + "#"; break;
 			case 5:  letters = "d" + octaveNumber; break;
