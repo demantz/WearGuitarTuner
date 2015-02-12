@@ -17,8 +17,9 @@ dazu mit dem Finger lange auf den Bildschirm Ihrer Smartwatch oder benutzen Sie 
 Smartphone!</string>
     <string name="skip_intro">Überspringen</string>
     <string name="welcome_message">Willkommen zum Gitarrenstimmgerät für Android Wear! Bitte starten Sie die App
-auf ihrer Smartwatch. Wenn Sie die App dort nicht finden können, hilft eventuell ein Klick auf \'Apps erneut
-synchronisieren\' unter den Einstellungen der Google Android Wear App.</string>
+auf ihrer Smartwatch. Wenn Sie die App dort nicht finden können, haben Sie etwas Geduld. Der Installationsprozess
+kann ein oder zwei Minuten dauern. Wenn Sie die Installation manuell anstoßen wollen hilft eventuell ein Klick
+auf \'Apps erneut synchronisieren\' unter den Einstellungen der Google Android Wear App.</string>
     <string name="button_shareLog">Versende die Logdatei per Email</string>
     <string name="chooseMailApp">Wähle eine App zum Versenden der Logdatei</string>
     <string name="i_got_it">Ich habe es verstanden!</string>
@@ -34,4 +35,6 @@ synchronisieren\' unter den Einstellungen der Google Android Wear App.</string>
     <string name="share">Teilen</string>
     <string name="cancel">Abbrechen</string>
     <string name="wearable_log">Log der Uhr</string>
+    <string name="vibration_enabled">Vibration aktiviert</string>
+    <string name="choose_a_skin">Wähle das Aussehen</string>
 </resources>

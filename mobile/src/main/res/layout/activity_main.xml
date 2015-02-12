@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:background="@color/light_background_color"
             android:textColor="@color/light_highlight_color"
-            android:text="I got it!"
+            android:text="@string/i_got_it"
             android:padding="10dp"
             android:onClick="onBtHideWelcomeMsgClicked"/>
     </LinearLayout>
@@ -57,7 +57,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choose a Skin:"
+            android:text="@string/choose_a_skin"
             android:textSize="20dp"
             android:textStyle="bold"
             android:textColor="@color/light_foreground_color"/>
@@ -88,7 +88,7 @@
         <Switch
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Vibration enabled"
+            android:text="@string/vibration_enabled"
             android:id="@+id/sw_vibrate"
             android:textSize="20dp"
             android:textStyle="bold"

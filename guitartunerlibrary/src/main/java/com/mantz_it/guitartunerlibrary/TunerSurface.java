@@ -35,11 +35,17 @@ import android.view.SurfaceView;
  */
 public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTunerCallbackInterface, SurfaceHolder.Callback {
 	private static final String LOGTAG = "TunerSurface";
-	private TunerSkin tunerSkin;
-	private int width = -1;
-	private int height = -1;
-	private boolean round;
+	private TunerSkin tunerSkin;	// skin that does the drawing
+	private int width = -1;			// current width of the surface
+	private int height = -1;		// current height of the surface
+	private boolean round;			// indicates if the surface has a round shape
 
+	/**
+	 * constructor.
+	 *
+	 * @param context		// application context
+	 * @param attributeSet	// used by the Android system to pass attributes to the view
+	 */
 	public TunerSurface(Context context, AttributeSet attributeSet) {
 		super(context, attributeSet);
 		// Add a Callback to get informed when the dimensions of the SurfaceView changes:
@@ -98,6 +104,10 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 		return true;
 	}
 
+	/**
+	 * uses the tunerSkin to draw the results of the current cycle without animations
+	 * @param guitarTuner		GuitarTuner instance holding the latest results
+	 */
 	private void draw(GuitarTuner guitarTuner) {
 		Canvas c = null;
 		try {
@@ -121,6 +131,12 @@ public class TunerSurface extends SurfaceView implements GuitarTuner.GuitarTuner
 		}
 	}
 
+	/**
+	 * uses the tunerSkin to draw the results of the current cycle. Might draw multiple times
+	 * in order to animate the transition from the old results to the new ones.
+	 *
+	 * @param guitarTuner		GuitarTuner instance holding the latest results (and the old ones)
+	 */
 	private void animatedDraw(GuitarTuner guitarTuner) {
 		float updateRate = guitarTuner.getUpdateRate();
 		int framesToDraw = (int)(tunerSkin.getDesiredRefreshRate() / updateRate + 1);

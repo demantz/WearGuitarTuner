@@ -96,6 +96,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 			}
 		});
 
+		// create a google api client
 		googleApiClient = new GoogleApiClient.Builder(this)
 				.addConnectionCallbacks(this)
 				.addOnConnectionFailedListener(this)
@@ -140,7 +141,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	@Override
 	protected void onRestart() {
 		super.onRestart();
-		Log.d(LOGTAG, "onRestart: deactivate workaround!");
+		Log.d(LOGTAG, "onRestart");
 	}
 
 	@Override
@@ -168,6 +169,8 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	protected void onResume() {
 		super.onResume();
 		Log.d(LOGTAG, "onResume");
+
+		// create and start the audio processing thread (guitar tuner thread)
 		audioProcessingEngine = new AudioProcessingEngine(guitarTuner);
 		audioProcessingEngine.start();
 	}
@@ -191,6 +194,8 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	protected void onPause() {
 		super.onPause();
 		Log.d(LOGTAG, "onPause");
+
+		// stop the audio processing thread
 		if(audioProcessingEngine != null) {
 			audioProcessingEngine.stopProcessing();
 			try {
@@ -216,6 +221,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully
 	 */
 	@Override
@@ -245,6 +251,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully and the api connection is suspended again
 	 */
 	@Override
@@ -253,6 +260,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	/**
+	 * (OnConnectionFailedListener)
 	 * Gets called after googleApiClient.connect() was executed and failed
 	 */
 	@Override
@@ -261,6 +269,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a new node (a handheld) is connected to the watch
 	 */
 	@Override
@@ -270,6 +279,7 @@ public class MainActivity extends Activity implements View.OnApplyWindowInsetsLi
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a node (a handheld) disconnects from the watch
 	 */
 	@Override

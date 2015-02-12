@@ -10,7 +10,7 @@ import java.util.Locale;
  *
  * Module:      GuitarTuner.java
  * Description: This class will extract the pitch information from the fft samples
- *              and generate the tuner output.
+ *              and generate the tuner output which is passed to the callback interface (TunerSurface)
  *
  * @author Dennis Mantz
  *
@@ -33,13 +33,13 @@ import java.util.Locale;
  */
 public class GuitarTuner {
 	private static final String LOGTAG = "GuitarTuner";
-	private static final int LOW_CUT_OFF_FREQUENCY = 50;
-	private static final int HIGH_CUT_OFF_FREQUENCY = 2500;
-	private static final float CONCERT_PITCH = 440.0f;
-	private static final int HPS_ORDER = 3;
-	private static final long[] VIBRATE_PATTERN_UP = {0, 200};
-	private static final long[] VIBRATE_PATTERN_DOWN = {0, 200, 200, 200};
-	private static final long[] VIBRATE_PATTERN_TUNED = {0, 100, 100, 100, 100, 100};
+	private static final int LOW_CUT_OFF_FREQUENCY = 50;	// lowest frequency that will be extracted from the fft data
+	private static final int HIGH_CUT_OFF_FREQUENCY = 2500;	// highest frequency that will be extracted from the fft data
+	private static final float CONCERT_PITCH = 440.0f;		// frequency of the A4 pitch
+	private static final int HPS_ORDER = 3;					// order to calculate the harmonic product spectrum
+	private static final long[] VIBRATE_PATTERN_UP = {0, 200};							//  ~~~
+	private static final long[] VIBRATE_PATTERN_DOWN = {0, 200, 200, 200};				//  ~~~   ~~~
+	private static final long[] VIBRATE_PATTERN_TUNED = {0, 100, 100, 100, 100, 100};	//  ~~  ~~  ~~
 	private GuitarTunerCallbackInterface callbackInterface;
 	private Vibrator vibrator;
 
@@ -58,11 +58,26 @@ public class GuitarTuner {
 	private boolean valid;					// indicates if the current result is valid
 	private boolean vibrate = false;		// on/off switch for the vibration feedback
 
+	/**
+	 * constructor
+	 *
+	 * @param callbackInterface		interface that will get the results of the tuner
+	 * @param vibrator				Vibrator instance
+	 */
 	public GuitarTuner(GuitarTunerCallbackInterface callbackInterface, Vibrator vibrator) {
 		this.callbackInterface = callbackInterface;
 		this.vibrator = vibrator;
 	}
 
+	/**
+	 * This method processes the fft samples from the AudioProcessingEngine and pass the results to
+	 * the callback interface.
+	 *
+	 * @param mag			fft samples (frequency spectrum)
+	 * @param sampleRate	samplerate of the audio source
+	 * @param updateRate	rate at which the audioProcessingEngine will call this method
+	 * @return true if success; false if something went wrong (e.g. the callback interface returned an error)
+	 */
 	public boolean processFFTSamples(float[] mag, int sampleRate, float updateRate) {
 		this.lastUpdateTimestamp = System.currentTimeMillis();
 		this.updateRate = updateRate;
@@ -89,7 +104,7 @@ public class GuitarTuner {
 		strongestFrequency = maxIndex * hzPerSample;
 
 		// detect the relevant frequency component:
-		detectedFrequency = strongestFrequency; 	// DEBUG
+		detectedFrequency = strongestFrequency; 	// this might be improved in the future (maybe the strongest frequency is not always the correct one?)
 		targetPitchIndex = frequencyToPitchIndex(detectedFrequency);
 		targetFrequency = pitchIndexToFrequency(targetPitchIndex);
 		valid = detectedFrequency >= pitchIndexToFrequency(0);
@@ -167,16 +182,33 @@ public class GuitarTuner {
 		}
 	}
 
+	/**
+	 * converts a frequency (float) into an pitch index ( 0 is A0, 1 is A0#, 2 is B0, 3 is C1, ...).
+	 * This will round the frequency to the closest pitch index.
+	 *
+	 * @param frequency		frequency in Hz
+	 * @return pitch index
+	 */
 	public int frequencyToPitchIndex(float frequency) {
 		float A1 = CONCERT_PITCH / 8;
 		return Math.round((float) (12 * Math.log(frequency / A1) / Math.log(2)));
 	}
 
+	/**
+	 * returns the corresponding frequency (in Hz) for a given pitch index
+	 * @param index			pitch index ( 0 is A0, 1 is A0#, 2 is B0, 3 is C1, ...)
+	 * @return frequency in Hz
+	 */
 	public float pitchIndexToFrequency(int index) {
 		float A1 = CONCERT_PITCH / 8;
 		return (float) (A1 * Math.pow(2, index/12f));
 	}
 
+	/**
+	 * returns the corresponding human readable pitch letter for a given pitch index
+	 * @param index			pitch index ( 0 is A0, 1 is A0#, 2 is B0, 3 is C1, ...)
+	 * @return pitch letter (e.g. "a0" or "c1#")
+	 */
 	public String pitchLetterFromIndex(int index) {
 		String letters;
 		int octaveNumber = ((index+9) / 12) + 1;
@@ -203,18 +235,35 @@ public class GuitarTuner {
 		return letters;
 	}
 
+	/**
+	 * calculates the lowest frequency that would still be considered as 'tuned' to the given
+	 * pitch index.
+	 *
+	 * @param pitchIndex		pitch index ( 0 is A0, 1 is A0#, 2 is B0, 3 is C1, ...)
+	 * @return the lower boundary frequency (in Hz) for a tuned note
+	 */
 	public float getLowerToleranceBoundaryFrequency(int pitchIndex) {
 		float frequency = pitchIndexToFrequency(pitchIndex);
 		float nextLowerFrequency = pitchIndexToFrequency(pitchIndex-1);
 		return frequency - 0.05f * (frequency-nextLowerFrequency);
 	}
 
+	/**
+	 * calculates the highest frequency that would still be considered as 'tuned' to the given
+	 * pitch index.
+	 *
+	 * @param pitchIndex		pitch index ( 0 is A0, 1 is A0#, 2 is B0, 3 is C1, ...)
+	 * @return the upper boundary frequency (in Hz) for a tuned note
+	 */
 	public float getUpperToleranceBoundaryFrequency(int pitchIndex) {
 		float frequency = pitchIndexToFrequency(pitchIndex);
 		float nextUpperFrequency = pitchIndexToFrequency(pitchIndex+1);
 		return frequency + 0.05f * (nextUpperFrequency-frequency);
 	}
 
+	/**
+	 * @return true if the detectedFrequency is 'tuned' to the current targetPitch
+	 */
 	public boolean isTuned() {
 		return detectedFrequency > getLowerToleranceBoundaryFrequency(targetPitchIndex)
 				&& detectedFrequency < getUpperToleranceBoundaryFrequency(targetPitchIndex);

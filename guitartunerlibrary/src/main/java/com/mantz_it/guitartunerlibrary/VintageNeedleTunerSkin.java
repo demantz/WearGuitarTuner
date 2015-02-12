@@ -9,10 +9,10 @@ import android.graphics.LinearGradient;
 import android.graphics.Shader;
 
 /**
- * <h1>Wear Guitar Tuner - Default Tuner Skin</h1>
+ * <h1>Wear Guitar Tuner - Vintage Needle Tuner Skin</h1>
  *
- * Module:      DefaultTunerSkin.java
- * Description: This is a simple and very basic skin without any additional features.
+ * Module:      VintageNeedleTunerSkin.java
+ * Description: This is nice skin with a vintage look and a needle. It is based on the default skin
  *
  * @author Dennis Mantz
  *
@@ -35,14 +35,18 @@ import android.graphics.Shader;
  */
 public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 
-	private Resources resources;
-	private Bitmap scaledBackground;
+	private Resources resources;		// resources instance to load bitmaps
+	private Bitmap scaledBackground;	// will hold the background bitmap scaled to the surface dimensions
 
+	/**
+	 * constructor.
+	 * @param resources		resources instance to load bitmaps
+	 */
 	public VintageNeedleTunerSkin(Resources resources) {
 		super();
 		this.resources = resources;
-		sideLettersPosition = 0.45f;
-		maxAngle = 0.6f;
+		sideLettersPosition = 0.45f;	// bring the side letters closer to the center
+		maxAngle = 0.6f;				// also narrow the scale to fit inside the window of the background image
 	}
 
 	@Override
@@ -55,12 +59,7 @@ public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 		gradientPaint.setShader(new LinearGradient(width/5, 0, width / 2, 0, Color.DKGRAY, Color.LTGRAY, Shader.TileMode.MIRROR));
 
 		// Load skin background and scale it to the surface dimensions
-		if(width > 0 && height > 0) {
-			if(round)
-				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_round), width, height, false);
-			else
-				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_rect), width, height, false);
-		}
+		loadBackground();
 	}
 
 	@Override
@@ -68,6 +67,13 @@ public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 		super.setRound(round);
 
 		// Load skin background and scale it to the surface dimensions
+		loadBackground();
+	}
+
+	/**
+	 * Loads the background bitmap and scales it according to the surface dimensions
+	 */
+	private void loadBackground() {
 		if(width > 0 && height > 0) {
 			if(round)
 				scaledBackground = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.vintage_tuner_skin_round), width, height, false);
@@ -76,18 +82,22 @@ public class VintageNeedleTunerSkin extends DefaultTunerSkin {
 		}
 	}
 
+	@Override
 	public void draw(Canvas c, GuitarTuner tuner) {
 		draw(c, tuner, 0, 1);
 	}
 
 	@Override
 	public void draw(Canvas c, GuitarTuner tuner, int frameNumber, int framesPerCycle) {
+		// for detailed comments refer to the draw() implementation in DefaultTunerSkin!
+
 		// Clear the canvas
 		c.drawRect(0, 0, width, height, backgroundPaint);
 
 		// draw scale (21 dashes)
 		drawScale(c);
 
+		// only draw pitch letters and needle if data is valid
 		if(tuner.isValid()) {
 			float targetFrequency = tuner.getTargetFrequency();
 			float lastTargetFrequency = tuner.getLastTargetFrequency();

@@ -1,6 +1,7 @@
 package com.mantz_it.guitartunerlibrary;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
@@ -33,9 +34,13 @@ import java.text.DecimalFormat;
  */
 public class DebugTunerSkin extends TunerSkin {
 
+	protected Paint fftPaint;
+
 	@Override
 	public void updateWidthAndHeight(int width, int height) {
 		super.updateWidthAndHeight(width, height);
+		fftPaint = new Paint();
+		fftPaint.setColor(Color.BLUE);
 		foregroundPaint.setTextSize(height*0.1f);
 		invalidPaint.setTextSize(height*0.1f);
 	}
@@ -78,13 +83,24 @@ public class DebugTunerSkin extends TunerSkin {
 			// draw pitch in letters
 			yPos += bounds.height() * 1.1f;
 			text = tuner.pitchLetterFromIndex(pitchIndex) + new DecimalFormat(" (###.# Hz)").format(tuner.pitchIndexToFrequency(pitchIndex));
-			;
 			paint.getTextBounds(text, 0, text.length(), bounds);
 			labelPosition = frequencyPosition <= width / 2 ? frequencyPosition + 5 : frequencyPosition - bounds.width() - 5;
 			c.drawText(text, 0, text.length(), labelPosition, yPos, paint);
 		}
 	}
 
+	/**
+	 * Draws the given samples as spectrum (fft) on the canvas.
+	 *
+	 * @param c				canvas to draw on
+	 * @param paint			paint instance that will be used for drawing
+	 * @param values		sample values (fft data)
+	 * @param start			first index in values that should be drawn
+	 * @param end			last index in values that should be drawn
+	 * @param minDB			lowest dB value on the vertical scale
+	 * @param maxDB			highest dB value on the vertical scale
+	 * @param hzPerSample	width (in Hz) of one FFT bin (one index) in the values array
+	 */
 	private void drawSpectrum(Canvas c, Paint paint, float[] values, int start, int end, float minDB, float maxDB, float hzPerSample) {
 		float previousY		 = height;	// y coordinate of the previously processed pixel
 		float currentY;					// y coordinate of the currently processed pixel

@@ -45,7 +45,7 @@ import android.widget.TextView;
  */
 public class IntroActivity extends FragmentActivity implements ViewPager.OnPageChangeListener {
 
-	private static final int NUM_PAGES = 3;
+	private static final int NUM_PAGES = 3;		// total number of slides
 	private ViewPager pager;
 	private Button bt_skip;
 	private Button bt_next;
@@ -78,6 +78,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 		}
 	}
 
+	/**
+	 * Will set the flag to not show this intro again and then start the main activity
+	 */
 	public void endIntro() {
 		// update the value in the preferences:
 		SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -90,6 +93,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 		finish();
 	}
 
+	/**
+	 * called by the Android System if the user presses the back button.
+	 */
 	@Override
 	public void onBackPressed() {
 		if (pager.getCurrentItem() == 0) {
@@ -102,10 +108,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 		}
 	}
 
+	// OnPageChangeListener
 	@Override
-	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-	}
+	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
 
 	@Override
 	public void onPageSelected(int position) {
@@ -119,11 +124,13 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 	}
 
 	@Override
-	public void onPageScrollStateChanged(int state) {
+	public void onPageScrollStateChanged(int state) {}
+	// /OnPageChangeListener
 
-	}
-
-
+	/**
+	 * A simple PageAdapter used with the ViewPager. Will create, fill and return
+	 * ScreenSlidePageFragments according treturno the selected page.
+	 */
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 		public ScreenSlidePagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -158,6 +165,10 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 		}
 	}
 
+	/**
+	 * This fragment is uses as a slide in the ViewPager. It consists of a heading, a text and
+	 * a picture.
+	 */
 	public static class ScreenSlidePageFragment extends Fragment {
 		private ImageView iv_image = null;
 		private TextView tv_text = null;

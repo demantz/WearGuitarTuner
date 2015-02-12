@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="welcome_message">This is Wear Guitar Tuner! Please launch the App on your connected
-wearable Android device. If you can\'t find the App on your wearable device, try to open the Android Wear
+wearable Android device. If you can\'t find the App on your wearable device be patient. The installation
+process might take one or two minutes. If you want to trigger installation again try to open the Android Wear
 Companion App and hit \'Resync Apps\' in the Settings.</string>
     <string name="action_showHandheldLog">Show handheld log</string>
     <string name="action_showWearableLog">Show wearable log</string>
@@ -13,9 +14,13 @@ Companion App and hit \'Resync Apps\' in the Settings.</string>
     <string name="intro_page_0_heading">Welcome to Wear Guitar Tuner</string>
     <string name="intro_page_1_heading">Haptic Feedback</string>
     <string name="intro_page_2_heading">Customize Wear Guitar Tuner</string>
-    <string name="intro_page_0_text">bla bla welcome</string>
-    <string name="intro_page_1_text">bla bla vibration</string>
-    <string name="intro_page_2_text">bla bla settings</string>
+    <string name="intro_page_0_text">An App to tune your guitar with the help of your Android Wear smartwatch!
+Click on \'Next\' to see how it works!</string>
+    <string name="intro_page_1_text">During the tuning process the wearable device gives haptic feedback about
+the tuning of the current note. A single vibration indicates that the pitch is too low. Two vibrations indicate
+that the pitch is too high. If the pitch is tuned correctly the device will vibrate three times very quickly</string>
+    <string name="intro_page_2_text">You can customize the look and feel of the tuner app. Long press on the
+screen of the wearable device to open the settings menu or use the companion app on the handheld device.</string>
     <string name="i_got_it">I got it!</string>
     <string name="pref_mainActivityFirstStart" translatable="false">pref_mainActivityFirstStart</string>
     <string name="pref_showWelcomeCard" translatable="false">pref_showWelcomeCard</string>
@@ -30,5 +35,7 @@ Companion App and hit \'Resync Apps\' in the Settings.</string>
     <string name="share">Share</string>
     <string name="cancel">Cancel</string>
     <string name="wearable_log">Wearable Log</string>
+    <string name="vibration_enabled">Vibration enabled</string>
+    <string name="choose_a_skin">Choose a skin</string>
 
 </resources>

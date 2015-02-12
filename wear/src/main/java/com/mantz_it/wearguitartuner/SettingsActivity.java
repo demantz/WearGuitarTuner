@@ -106,14 +106,17 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 		super.onStop();
 	}
 
+	/**
+	 * will exit the settings activity (return to main activity):
+	 */
 	private void returnToMainActivity() {
-		// exit the settings activity (return to main activity):
 		Intent intent = new Intent(SettingsActivity.this, MainActivity.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully
 	 */
 	@Override
@@ -136,6 +139,7 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully and the api connection is suspended again
 	 */
 	@Override
@@ -144,6 +148,7 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 	}
 
 	/**
+	 * (OnConnectionFailedListener)
 	 * Gets called after googleApiClient.connect() was executed and failed
 	 */
 	@Override
@@ -152,6 +157,7 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a new node (a handheld) is connected to the watch
 	 */
 	@Override
@@ -161,6 +167,7 @@ public class SettingsActivity extends Activity implements GoogleApiClient.Connec
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a node (a handheld) disconnects from the watch
 	 */
 	@Override

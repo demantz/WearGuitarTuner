@@ -50,12 +50,22 @@ public class TunerWearableListenerService extends WearableListenerService {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		// create a google api client instance. It will be connected and disconnected every time
+		// sendMessageAsync() has to send a message.
 		googleApiClient = new GoogleApiClient.Builder(this)
 				.addApi(Wearable.API)
 				.build();
 		Log.i(LOGTAG, "onCreate: Service created!");
 	}
 
+	/**
+	 * Will be called from the Android System if a message was received.
+	 * We will check the type of the message and handle it correctly:
+	 * - if it is a get-log-message we collect the log data and send it back to the originator of the message
+	 * - if it is a sync-preference-message we pass it to the handler method of the PreferenceSyncHelper
+	 * @param messageEvent		the received message
+	 */
 	@Override
 	public void onMessageReceived(MessageEvent messageEvent) {
 		Log.i(LOGTAG, "onMessageReceived: received a message (" + messageEvent.getPath() + ") from "
@@ -92,16 +102,30 @@ public class TunerWearableListenerService extends WearableListenerService {
 		super.onDataChanged(dataEvents);
 	}
 
+	/**
+	 * Sends a message asynchronously. If this method is called multiple times in a row, each message
+	 * will be send separately each after another but with undefined order!
+	 *
+	 * @param nodeID	node id of the receiver
+	 * @param path		path of this message
+	 * @param payload	payload data of the message
+	 */
 	private void sendMessageAsync(final String nodeID, final String path, final byte[] payload) {
+		// run it in the background:
 		Thread asyncThread = new Thread() {
 			public void run() {
 				Log.d(LOGTAG, "sendMessageAsync: Thread " + this.getName() + " started!");
+
+				// only one thread at a time is allowed to use the googleApiClient:
 				synchronized (this) {
+					// connect the googleApiClient:
 					googleApiClient.blockingConnect(1000, TimeUnit.MILLISECONDS);
 					if(!googleApiClient.isConnected()) {
 						Log.e(LOGTAG, "sendMessageAsync (Thread="+this.getName()+"): Can't connect to google API client! stop.");
 						return;
 					}
+
+					// send the message:
 					MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
 							googleApiClient, nodeID, path, payload).await(1000, TimeUnit.MILLISECONDS);
 					if (!result.getStatus().isSuccess()) {
@@ -109,6 +133,8 @@ public class TunerWearableListenerService extends WearableListenerService {
 					} else {
 						Log.d(LOGTAG, "sendMessageAsync: Message " + result.getRequestId() + " was sent! (" + payload.length + " Byte)");
 					}
+
+					// disconnect the api client:
 					googleApiClient.disconnect();
 				}
 				Log.d(LOGTAG, "sendMessageAsync: Thread " + this.getName() + " stopped!");

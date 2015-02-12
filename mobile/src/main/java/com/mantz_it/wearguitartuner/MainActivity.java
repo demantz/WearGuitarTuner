@@ -162,6 +162,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	@Override
 	protected void onResume() {
 		super.onResume();
+
+		// create and start the audio processing thread (guitar tuner thread)
 		audioProcessingEngine = new AudioProcessingEngine(guitarTuner);
 		audioProcessingEngine.start();
 	}
@@ -169,6 +171,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+		// stop the audio processing thread
 		if(audioProcessingEngine != null) {
 			audioProcessingEngine.stopProcessing();
 			try {
@@ -182,6 +186,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
 	@Override
 	protected void onStop() {
+		// disconnect the google api client
 		if (googleApiClient != null && googleApiClient.isConnected()) {
 			Wearable.MessageApi.removeListener(googleApiClient, this);
 			googleApiClient.disconnect();
@@ -190,6 +195,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully
 	 */
 	@Override
@@ -213,6 +219,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	}
 
 	/**
+	 * (ConnectionCallbacks)
 	 * Gets called after googleApiClient.connect() was executed successfully and the api connection is suspended again
 	 */
 	@Override
@@ -221,6 +228,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	}
 
 	/**
+	 * (OnConnectionFailedListener)
 	 * Gets called after googleApiClient.connect() was executed and failed
 	 */
 	@Override
@@ -229,6 +237,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a new node (a wearable) is connected to the phone
 	 */
 	@Override
@@ -238,6 +247,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 	}
 
 	/**
+	 * (NodeListener)
 	 * Gets called if a node (a wearable) disconnects from the phone
 	 */
 	@Override
@@ -249,6 +259,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		}
 	}
 
+	/**
+	 * (MessageListener)
+	 * will receive the response of the get log request and show an alert dialog containing the
+	 * wearable log data
+	 */
 	@Override
 	public void onMessageReceived(MessageEvent messageEvent) {
 		Log.i(LOGTAG, "onMessageReceived: received a message (" + messageEvent.getPath() + ") from "
@@ -298,6 +313,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		}
 	}
 
+	/**
+	 * (OnSharedPreferenceChangeListener)
+	 * @param sharedPreferences		shared prefs instance
+	 * @param key					key that changed
+	 */
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 		Log.d(LOGTAG, "onSharedPreferenceChanged: preference changed! (key=" + key + ")");
@@ -348,6 +368,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		return super.onOptionsItemSelected(item);
 	}
 
+	/**
+	 * called if the button 'i got it' was pressed (see activity_main.xml)
+	 * @param view		instance of the button
+	 */
 	public void onBtHideWelcomeMsgClicked(View view) {
 		ll_welcomeCard.setVisibility(View.GONE);
 
@@ -357,6 +381,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		edit.apply();
 	}
 
+	/**
+	 * will use the connected googleApiClient to send a request message to the wearable node asking
+	 * for the log data.
+	 */
 	public void queryWearableLog() {
 		if(!googleApiClient.isConnected()) {
 			Log.e(LOGTAG, "queryWearableLog: google api client not connected!");
@@ -369,6 +397,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 			return;
 		}
 
+		// show a progress dialog
 		if(progressDialog == null)
 			progressDialog = new ProgressDialog(this);
 		progressDialog.setTitle(getString(R.string.loading));
@@ -394,6 +423,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 		});
 	}
 
+	/**
+	 * will show a alert dialog containing the log data of the smartphone
+	 */
 	public void showHandheldLog() {
 		// Read the log:
 		StringBuilder log = new StringBuilder();
